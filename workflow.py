@@ -2,9 +2,12 @@ __all__ = ['Workflow']
 
 class _WorkflowNode(object):
 
-    def __init__(self, name, to_online=None):
+    def __init__(self, name, to_online=None, roles=None, **kwargs):
         self.name = name
         self.to_online = to_online
+        if roles is None:
+            roles = []
+        self.roles = roles
         self.__in = {}
         self.__out = {}
 
@@ -19,6 +22,7 @@ class _WorkflowNode(object):
             'name': self.name,
             'to_online': self.to_online,
             'outcoming': outcoming,
+            'roles': self.roles
         }
         return ret
 
@@ -29,8 +33,6 @@ class _WorkflowNode(object):
         return self.outcouming.get(key, default=default)
 
     def _add_incoming(self, node, _first=True):
-        # if isinstance(node, (str, unicode)):
-        #     node = _WorkflowNode(node)
         if not self.__in.get(node.name, False):
             self.__in[node.name] = node
             if _first:
@@ -38,8 +40,6 @@ class _WorkflowNode(object):
             return node
 
     def _add_outcoming(self, node, _first=True):
-        # if isinstance(node, (str, unicode)):
-        #     node = _WorkflowNode(node)
         if not self.__out.get(node.name, False):
             self.__out[node.name] = node
             if _first:
@@ -48,8 +48,6 @@ class _WorkflowNode(object):
 
     def _del_incoming(self, node, _first=True):
         name = node.name
-        # if isinstance(node, _WorkflowNode):
-        #     name = node.name
         try:
             node = self.__in.pop(name)
         except KeyError:
@@ -60,8 +58,6 @@ class _WorkflowNode(object):
 
     def _del_outcoming(self, node, _first=True):
         name = node.name
-        # if isinstance(node, _WorkflowNode):
-        #     name = node.name
         try:
             node = self.__out.pop(name)
         except KeyError:
@@ -81,9 +77,9 @@ class _WorkflowNode(object):
 
 class Workflow(object):
 
-    def __init__(self, node):
+    def __init__(self, name, **kwargs):
         self.__nodes = {}
-        self.add_node(node, head=True)
+        self.add_node(name, head=True, **kwargs)
 
     def __repr__(self):
         return repr(self.__dict__())
@@ -104,9 +100,9 @@ class Workflow(object):
     def parse(cls, wf_dict):
         for idx, val in enumerate(wf_dict.values()):
             if idx == 0:
-                wf = cls(val['name'])
+                wf = cls(**val)
             else:
-                wf = wf.add_node(val['name'])
+                wf = wf.add_node(**val)
         for key, val in wf_dict.iteritems():
             for out_key in val['outcoming'].iterkeys():
                 wf.add_arch(key, out_key)
@@ -139,7 +135,7 @@ class Workflow(object):
         node_out._add_outcoming(node_in)
         return self
 
-    def add_archs(self, **archs):
+    def add_archs(self, *archs):
         [self.add_arch(arch[0], arch[1]) for arch in archs]
         return self
 
