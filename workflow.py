@@ -4,7 +4,7 @@ __all__ = ['Workflow']
 
 class _WorkflowNode(object):
 
-    def __init__(self, name, to_online=None, roles=None, **kwargs):
+    def __init__(self, name, to_online=None, roles=None):
         self.name = name
         self.to_online = to_online
         if roles is None:
@@ -17,13 +17,14 @@ class _WorkflowNode(object):
         return repr(self.__dict__())
 
     def __dict__(self):
-        outcoming = {}
-        for name, elem in self.outcoming.iteritems():
-            outcoming[name] = elem.__dict__()
+        # outcoming = {}
+        # for name, elem in self.outcoming.iteritems():
+        #     outcoming[name] = elem.__dict__()
         ret = {
             'name': self.name,
             'to_online': self.to_online,
-            'outcoming': outcoming,
+            'outcoming': [out.name for out in self.outcoming.itervalues()],
+            'incoming': [out.name for out in self.incoming.itervalues()],
             'roles': self.roles
         }
         return ret
