@@ -5,7 +5,8 @@ from workflow import Workflow
 import json
 
 class Workflow(models.Mode):
-    _workflow = model.TextField()
+    name = models.CharField(max_length=256, unique=True)
+    _workflow = models.TextField()
 
     @property
     def workflow(self):
