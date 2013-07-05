@@ -4,7 +4,7 @@ __all__ = ['Workflow']
 
 class _WorkflowNode(object):
 
-    def __init__(self, name, to_online=None, roles=None):
+    def __init__(self, name, to_online=None, roles=None, **kwargs):
         self.name = name
         self.to_online = to_online
         if roles is None:
@@ -23,8 +23,9 @@ class _WorkflowNode(object):
         ret = {
             'name': self.name,
             'to_online': self.to_online,
-            'outcoming': [out.name for out in self.outcoming.itervalues()],
-            'incoming': [out.name for out in self.incoming.itervalues()],
+#            'outcoming': outcoming,
+            'outcoming': [elem.name for elem in self.outcoming.itervalues()],
+            'incoming': [elem.name for elem in self.incoming.itervalues()],
             'roles': self.roles
         }
         return ret
@@ -107,7 +108,9 @@ class Workflow(object):
             else:
                 wf = wf.add_node(**val)
         for key, val in wf_dict.iteritems():
-            for out_key in val['outcoming'].iterkeys():
+            # for out_key in val['outcoming'].iterkeys():
+                # wf.add_arch(key, out_key)
+            for out_key in val['outcoming']:
                 wf.add_arch(key, out_key)
         return wf
 
