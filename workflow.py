@@ -1,68 +1,73 @@
-class WorkflowNode(object):
+__all__ = ['Workflow']
 
-    def __init__(self, name, start=False, end=False,
-                 incoming=None, outcoming=None):
+class _WorkflowNode(object):
+
+    def __init__(self, name, to_online=None):
         self.name = name
-        if incoming is None:
-            incoming = {}
-        if outcoming is None:
-            outcoming = {}
-        self.__in = incoming
-        self.__out = outcoming
+        self.to_online = to_online
+        self.__in = {}
+        self.__out = {}
 
     def __repr__(self):
         return repr(self.__dict__())
 
     def __dict__(self):
+        outcoming = {}
+        for name, elem in self.outcoming.iteritems():
+            outcoming[name] = elem.__dict__()
         ret = {
             'name': self.name,
-            'outcoming': self.outcoming,
+            'to_online': self.to_online,
+            'outcoming': outcoming,
         }
         return ret
 
     def __getitem__(self, key):
         return self.outcoming[key]
 
-    def add_incoming(self, node, _first=True):
-        if isinstance(node, (str, unicode)):
-            node = WorkflowNode(node)
+    def get(self, key, default=None):
+        return self.outcouming.get(key, default=default)
+
+    def _add_incoming(self, node, _first=True):
+        # if isinstance(node, (str, unicode)):
+        #     node = _WorkflowNode(node)
         if not self.__in.get(node.name, False):
             self.__in[node.name] = node
             if _first:
-                node.add_outcoming(self, _first=False)
+                node._add_outcoming(self, _first=False)
             return node
 
-    def add_outcoming(self, node, _first=True):
-        if isinstance(node, (str, unicode)):
-            node = WorkflowNode(node)
+    def _add_outcoming(self, node, _first=True):
+        # if isinstance(node, (str, unicode)):
+        #     node = _WorkflowNode(node)
         if not self.__out.get(node.name, False):
             self.__out[node.name] = node
             if _first:
-                node.add_incoming(self, _first=False)
+                node._add_incoming(self, _first=False)
             return node
 
-    def del_incoming(self, node, _first=True):
-        name = node
-        if isinstance(node, WorkflowNode):
-            name = node.name
+    def _del_incoming(self, node, _first=True):
+        name = node.name
+        # if isinstance(node, _WorkflowNode):
+        #     name = node.name
         try:
             node = self.__in.pop(name)
         except KeyError:
             return None
         if _first:
-            node.del_outcoming(self.name, _first=False)
+            node._del_outcoming(self.name, _first=False)
         return node
 
-    def del_outcoming(self, node, _first=True):
-        name = node
-        if isinstance(node, WorkflowNode):
-            name = node.name
+    def _del_outcoming(self, node, _first=True):
+        name = node.name
+        # if isinstance(node, _WorkflowNode):
+        #     name = node.name
         try:
             node = self.__out.pop(name)
         except KeyError:
             return None
         if _first:
-            node.del_incoming(self.name, _first=False)
+            node._del_incoming(self.name, _first=False)
         return node
 
     @property
@@ -76,22 +81,68 @@ class WorkflowNode(object):
 
 class Workflow(object):
 
-    def __init__(self, *stat_names):
-        self._stats = {}
-        for stat_name in stat_names:
-            self._stats[stat_name] = WorkflowNode(stat_name)
+    def __init__(self, node):
+        self.__nodes = {}
+        self.add_node(node, head=True)
 
-    def add_node(self, node):
-        if isinstance(node, (str, unicode)):
-            if self._stats.get(node, False):
-                raise RuntimeError("Node with name '%s' already present." % node)
-            self._stats[node] = WorkflowNode(node)
-            return self._stats[node]
-        elif isinstance(node, WorkflowNode):
-            if self._stats.get(node.name, False):
-                raise RuntimeError("Node with name '%s' already present." % node)
-            self._stats[node.name] = node
-            return node
-        else:
-            raise AttributeError("A string or WorkflowNode expected, %s received instead." % type(node))
+    def __repr__(self):
+        return repr(self.__dict__())
 
+    def __dict__(self):
+        ret = {}
+        for key, val in self.__nodes.iteritems():
+            ret[key] = val.__dict__()
+        return ret
+
+    def __getitem__(self, key):
+        return self.__nodes[key]
+
+    def get(self, key, default=None):
+        return self.__nodes.get(key, default=default)
+
+    @classmethod
+    def parse(cls, wf_dict):
+        for idx, val in enumerate(wf_dict.values()):
+            if idx == 0:
+                wf = cls(val['name'])
+            else:
+                wf = wf.add_node(val['name'])
+        for key, val in wf_dict.iteritems():
+            for out_key in val['outcoming'].iterkeys():
+                wf.add_arch(key, out_key)
+        return wf
+
+    def add_node(self, name, head=False, **kwargs):
+        node = _WorkflowNode(name, **kwargs)
+        if head:
+            self.__head = node
+        self.__nodes[node.name] = node
+        return self
+
+    def add_nodes(self, *names):
+        [self.add_node(name) for name in names]
+        return self
+
+    def del_node(self, name):
+        if self.__head.name == name:
+            raise RuntimeError("Can not remove head")
+        node = self.__nodes.pop(name)
+        for node_out in node.outcoming.values():
+            node._del_outcoming(node_out)
+        for node_in in node.incoming.values():
+            node._del_incoming(node_in)
+        return self
+
+    def add_arch(self, name_out, name_in):
+        node_out = self.__nodes[name_out]
+        node_in = self.__nodes[name_in]
+        node_out._add_outcoming(node_in)
+        return self
+
+    def add_archs(self, **archs):
+        [self.add_arch(arch[0], arch[1]) for arch in archs]
+        return self
+
+    @property
+    def head(self):
+        return self.__head
