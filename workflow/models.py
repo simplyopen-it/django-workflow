@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
-from workflow import Workflow as WF
+from fields import WorkflowField
 import json
 
 class Workflow(models.Model):
     name = models.CharField(max_length=256, unique=True)
-    _workflow = models.TextField()
+    workflow = WorkflowField()
 
     # def __init__(self, name, workflow=None, *args, **kwargs):
     #     super(Workflow, self).__init__(name, *args, **kwargs)
@@ -15,13 +15,13 @@ class Workflow(models.Model):
     #     elif isintance(workflow, WF):
     #         self.workflow = workflow
 
-    @property
-    def workflow(self):
-        return WF.parse(json.loads(self._workflow))
+    # @property
+    # def workflow(self):
+    #     return WF.parse(json.loads(self._workflow))
 
-    @workflow.setter
-    def workflow(self, wf):
-        self._workflow = json.dumps(wf.__dict__())
+    # @workflow.setter
+    # def workflow(self, wf):
+    #     self._workflow = json.dumps(wf.__dict__())
 
     # def save(self, *args, **kwargs):
     #     super(Workflow, self).save(*args, **kwargs)

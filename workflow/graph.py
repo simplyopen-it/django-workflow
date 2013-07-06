@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['Workflow']
+__all__ = ['Graph']
 
-class _WorkflowNode(object):
+class GraphNode(object):
 
     def __init__(self, name, to_online=None, roles=None, **kwargs):
         self.name = name
@@ -17,13 +17,9 @@ class _WorkflowNode(object):
         return repr(self.__dict__())
 
     def __dict__(self):
-        # outcoming = {}
-        # for name, elem in self.outcoming.iteritems():
-        #     outcoming[name] = elem.__dict__()
         ret = {
             'name': self.name,
             'to_online': self.to_online,
-#            'outcoming': outcoming,
             'outcoming': [elem.name for elem in self.outcoming.itervalues()],
             'incoming': [elem.name for elem in self.incoming.itervalues()],
             'roles': self.roles
@@ -79,11 +75,13 @@ class _WorkflowNode(object):
         return self.__in.copy()
 
 
-class Workflow(object):
+class Graph(object):
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, *names, **kwargs):
         self.__nodes = {}
-        self.add_node(name, head=True, **kwargs)
+        self.__head = None
+        for idx, name in enumerate(names):
+            self.add_node(name, **kwargs)
 
     def __repr__(self):
         return repr(self.__dict__())
@@ -102,20 +100,20 @@ class Workflow(object):
 
     @classmethod
     def parse(cls, wf_dict):
+        # build nodes
+        wf = cls()
         for idx, val in enumerate(wf_dict.values()):
-            if idx == 0:
-                wf = cls(**val)
-            else:
-                wf = wf.add_node(**val)
+            wf = wf.add_node(**val)
+        # build archs
         for key, val in wf_dict.iteritems():
-            # for out_key in val['outcoming'].iterkeys():
-                # wf.add_arch(key, out_key)
             for out_key in val['outcoming']:
                 wf.add_arch(key, out_key)
         return wf
 
     def add_node(self, name, head=False, **kwargs):
-        node = _WorkflowNode(name, **kwargs)
+        node = GraphNode(name, **kwargs)
+        if self.__head is None:
+            self.__head = node
         if head:
             self.__head = node
         self.__nodes[node.name] = node
@@ -148,3 +146,7 @@ class Workflow(object):
     @property
     def head(self):
         return self.__head
+
+    @head.setter
+    def head(self, value):
+        self.__head = self.__nodes[value]
