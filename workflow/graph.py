@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from copy import deepcopy
 
 __all__ = ['Graph']
+
 
 class _GraphNode(object):
     ''' Reppresentation of an oriented-graph node.
@@ -35,8 +37,7 @@ class _GraphNode(object):
         '''
         '''
         self.name = name
-        for key, val in kwargs.iteritems():
-            setattr(self, key, val)
+        self.__attrs = kwargs
         self.__in = {}
         self.__out = {}
 
@@ -44,15 +45,16 @@ class _GraphNode(object):
         return repr(self.__dict__())
 
     def __dict__(self):
-        ret = {
-            'name': self.name,
-            'outcoming': [elem.name for elem in self.outcoming.itervalues()],
-            'incoming': [elem.name for elem in self.incoming.itervalues()],
-        }
+        ret = self.__attrs.copy()
+        ret['name'] = self.name
+        ret['outcoming'] = [elem.name for elem in self.outcoming.itervalues()]
+        ret['incoming'] = [elem.name for elem in self.incoming.itervalues()]
         return ret
 
     def __getitem__(self, key):
-        return self.outcoming[key]
+        if key == 'name':
+            return self.name
+        return self.__attrs[key]
 
     @property
     def outcoming(self):
@@ -86,7 +88,7 @@ class _GraphNode(object):
         except KeyError:
             return None
         if _first:
-            node.del_outcoming(self.name, _first=False)
+            node.del_outcoming(self, _first=False)
         return node
 
     def del_outcoming(self, node, _first=True):
@@ -96,7 +98,7 @@ class _GraphNode(object):
         except KeyError:
             return None
         if _first:
-            node.del_incoming(self.name, _first=False)
+            node.del_incoming(self, _first=False)
         return node
 
 
@@ -136,7 +138,8 @@ class Graph(object):
         self.__nodes = {'__HEAD__': head}
         for name in names:
             self.add_node(name, **kwargs)
-        self.__head = self.__nodes[self.__nodes['__HEAD__']]
+        if self.__nodes['__HEAD__'] is not None:
+            self.__head = self.__nodes[self.__nodes['__HEAD__']]
 
     def __repr__(self):
         return repr(self.__dict__())
@@ -152,6 +155,9 @@ class Graph(object):
 
     def __getitem__(self, key):
         return self.__nodes[key]
+
+    def deepcopy(self):
+        return self.__class__.parse(self.__dict__())
 
     @property
     def head(self):
@@ -181,20 +187,27 @@ class Graph(object):
         wf.head = head
         return wf
 
-    def add_node(self, name, head=False, **kwargs):
+    def add_node(self, name, head=False, inplace=True, **kwargs):
+        if not inplace:
+            self = self.deepcopy()
         node = _GraphNode(name, **kwargs)
+        self.__nodes[node.name] = node
         if head:
             self.__head = node
             self.__nodes['__HEAD__'] = node.name
-        self.__nodes[node.name] = node
         return self
 
-    def add_nodes(self, *names):
+    def add_nodes(self, *names, **kwargs):
+        if not kwargs.get('inplace', True):
+            self = self.deepcopy()
+            kwargs.pop('inplace')
         for name in names:
-            self.add_node(name)
+            self.add_node(name, **kwargs)
         return self
 
-    def del_node(self, name):
+    def del_node(self, name, inplace=True):
+        if not inplace:
+            self = self.deepcopy()
         if self.__head.name == name:
             raise RuntimeError("Can not remove head")
         node = self.__nodes.pop(name)
@@ -204,29 +217,42 @@ class Graph(object):
             node.del_incoming(node_in)
         return self
 
-    def del_nodes(self, *names):
+    def del_nodes(self, *names, **kwargs):
+        if not kwargs.get('inplace', True):
+            self = self.deepcopy()
+            kwargs.pop('inplace')
         for name in names:
             self.del_node(name)
         return self
 
-    def add_arch(self, name_out, name_in):
+    def add_arch(self, name_out, name_in, inplace=True):
+        if not inplace:
+            self = self.deepcopy()
         node_out = self.__nodes[name_out]
         node_in = self.__nodes[name_in]
         node_out.add_outcoming(node_in)
         return self
 
-    def add_archs(self, *archs):
+    def add_archs(self, *archs, **kwargs):
+        if not kwargs.get('inplace', True):
+            self = self.deepcopy()
+            kwargs.pop('inplace')
         for arch in archs:
             self.add_arch(arch[0], arch[1])
         return self
 
-    def del_arch(self, name_out, name_in):
+    def del_arch(self, name_out, name_in, inplace=True):
+        if not inplace:
+            self = self.deepcopy()
         node_out = self.__nodes[name_out]
         node_in = self.__nodes[name_in]
         node_out.del_outcoming(node_in)
         return self
 
-    def del_archs(self, *archs):
+    def del_archs(self, *archs, **kwargs):
+        if not kwargs.get('inplace', True):
+            self = self.deepcopy()
+            kwargs.pop('inplace')
         for arch in archs:
             self.del_arch(arch[0], arch[1])
         return self
