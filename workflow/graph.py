@@ -56,6 +56,11 @@ class _GraphNode(object):
             return self.name
         return self.__attrs[key]
 
+    def __setitem__(self, key, value):
+        if key == 'name':
+            raise KeyError('Can not change node name')
+        self.__attrs[key] = value
+
     @property
     def outcoming(self):
         return self.__out.copy()
@@ -64,8 +69,10 @@ class _GraphNode(object):
     def incoming(self):
         return self.__in.copy()
 
-    def get(self, key, default=None):
-        return self.__out.get(key, default=default)
+    def get(self, key, *args):
+        if key == 'name':
+            return self.name
+        return self.__attrs.get(key, *args)
 
     def add_incoming(self, node, _first=True):
         if not self.__in.get(node.name, False):
@@ -168,8 +175,8 @@ class Graph(object):
         self.__head = self.__nodes[value]
         self.__nodes['__HEAD__'] = self.__head.name
 
-    def get(self, key, default=None):
-        return self.__nodes.get(key, default=default)
+    def get(self, key, *args):
+        return self.__nodes.get(key, *args)
 
     @classmethod
     def parse(cls, wf_dict):
