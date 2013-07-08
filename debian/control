@@ -1,0 +1,15 @@
+Source: django-workflow
+Maintainer: SimplyOpen <info@simplyopen.org>
+Section: python
+Priority: optional
+Build-Depends: python, debhelper, python-setuptools
+Standards-Version: 3.9.4
+Vcs-Git: ssh://cerbero_repo/srv/vcs/git/django-workflow.git
+X-Python-Version: >= 2.6
+
+Package: python-django-workflow
+Architecture: all
+Recommends:
+Depends: ${misc:Depends}, ${python:Depends}, debconf (>= 0.5), python-django (>= 1.4.5-1)
+Description: Django workflow
+ Manage and edit workflows for your Django applications.
