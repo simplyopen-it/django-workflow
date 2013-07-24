@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 from setuptools import distutils
 import os
+from workflow import __version__
 
 rootpath = os.path.dirname(__file__)
 if rootpath != '':
@@ -26,7 +27,7 @@ app_path = os.path.join(rootpath, 'immigrationcenter')
 #     return data_files
 
 setup(name = "django-ordermanagement",
-      version = "0.1",
+      version = __version__,
       description = "Workflow editor for Django",
       long_description="Edit and Manage workflows to associate to your Django objects",
       author = "SimplyOpen",
