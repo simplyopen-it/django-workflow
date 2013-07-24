@@ -42,8 +42,9 @@ class _GraphNode(object):
         self.__out = {}
 
     def __repr__(self):
-        return repr(self.__dict__())
+        return repr(self.__dict__)
 
+    @property
     def __dict__(self):
         ret = self.__attrs.copy()
         ret['name'] = self.name
@@ -148,36 +149,6 @@ class Graph(object):
         if self.__nodes['__HEAD__'] is not None:
             self.__head = self.__nodes[self.__nodes['__HEAD__']]
 
-    def __repr__(self):
-        return repr(self.__dict__())
-
-    def __dict__(self):
-        ret = {}
-        for key, val in self.__nodes.iteritems():
-            try:
-                ret[key] = val.__dict__()
-            except AttributeError:
-                ret[key] = val
-        return ret
-
-    def __getitem__(self, key):
-        return self.__nodes[key]
-
-    def deepcopy(self):
-        return self.__class__.parse(self.__dict__())
-
-    @property
-    def head(self):
-        return self.__head
-
-    @head.setter
-    def head(self, value):
-        self.__head = self.__nodes[value]
-        self.__nodes['__HEAD__'] = self.__head.name
-
-    def get(self, key, *args):
-        return self.__nodes.get(key, *args)
-
     @classmethod
     def parse(cls, wf_dict):
         # build nodes
@@ -193,6 +164,73 @@ class Graph(object):
                 wf.add_arch(key, out_key)
         wf.head = head
         return wf
+
+    ################
+    # Python magic #
+    ################
+
+    def __repr__(self):
+        return repr(self.__dict__)
+
+    @property
+    def __dict__(self):
+        ret = {}
+        for key, val in self.__nodes.iteritems():
+            try:
+                ret[key] = val.__dict__
+            except AttributeError:
+                ret[key] = val
+        return ret
+
+    def __getitem__(self, key):
+        return self.__nodes[key]
+
+    ################################
+    # Getters/Settes and iterators #
+    ################################
+
+    def deepcopy(self):
+        return self.__class__.parse(self.__dict__)
+
+    def get(self, key, *args):
+        return self.__nodes.get(key, *args)
+
+    @property
+    def head(self):
+        return self.__head
+
+    @head.setter
+    def head(self, value):
+        self.__head = self.__nodes[value]
+        self.__nodes['__HEAD__'] = self.__head.name
+
+    def keys(self):
+         return [key for key in self.__nodes.keys() if key != '__HEAD__']
+
+    def iterkeys(self):
+        for key in self.__nodes.iterkeys():
+            if key != '__HEAD__':
+                yield key
+
+    def values(self):
+        return [val for key, val in self.__nodes.items() if key != '__HEAD__']
+
+    def itervalues(self):
+        for key, val in seld.__nodes.iteritems():
+            if key != '__HEAD__':
+                yield val
+
+    def items(self):
+        return [(key, val) for key, val in self.__nodes.items() if key != '__HEAD__']
+
+    def itervalues(self):
+        for key, value in self.__nodes.itervalues():
+            if key != '__HEAD__':
+                yield (key, value)
+
+    ##################################
+    # Methods to modify the Workflow #
+    ##################################
 
     def add_node(self, name, head=False, inplace=True, **kwargs):
         if not inplace:
