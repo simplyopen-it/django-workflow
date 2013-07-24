@@ -1,3 +1,9 @@
+django-workflow (0.2-1) stable; urgency=low
+
+  * v0.2
+
+ -- Marco Pattaro <mpattaro@gmail.com>  Wed, 24 Jul 2013 18:16:40 +0200
+
 django-workflow (0.1-1) stable; urgency=low
 
   * NMU 0.1
