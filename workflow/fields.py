@@ -19,4 +19,4 @@ class WorkflowField(models.TextField):
     def get_prep_value(self, value):
         if not isinstance(value, WF):
             raise TypeError("value not a Graph instance")
-        return json.dumps(value.__dict__())
+        return json.dumps(value.__dict__)
