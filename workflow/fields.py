@@ -3,6 +3,7 @@ from django.db import models
 from graph import Graph as WF
 import json
 
+
 class WorkflowField(models.TextField):
 
     __metaclass__ = models.SubfieldBase
@@ -10,6 +11,8 @@ class WorkflowField(models.TextField):
     description = 'A django workflow'
 
     def to_python(self, value):
+        if value is None:
+            return None
         if value == '':
             value = '{}'
         if isinstance(value, WF):

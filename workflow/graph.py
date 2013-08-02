@@ -162,7 +162,8 @@ class Graph(object):
         for key, val in wf_dict.iteritems():
             for out_key in val['outcoming']:
                 wf.add_arch(key, out_key)
-        wf.head = head
+        if head is not None:
+            wf.head = head
         return wf
 
     ################
