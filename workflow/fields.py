@@ -11,6 +11,7 @@ class WorkflowField(models.TextField):
     description = 'A django workflow'
 
     def to_python(self, value):
+        ''' DB value to Python '''
         if value is None:
             return None
         if value == '':
@@ -18,13 +19,20 @@ class WorkflowField(models.TextField):
         if isinstance(value, WF):
             return value
         if isinstance(value, (str, unicode)):
-            return value.replace('null', 'None')
-        return WF.parse(json.loads(value))
+            try:
+                # This happens when saving a Form value
+                value = json.loads(value.replace('None', 'null'))
+            except ValueError:
+                # This happends when loading a Form value
+                return value.replace('null', 'None')
+        return WF.parse(value)
 
     def get_prep_value(self, value):
+        ''' Python to DB value '''
         if isinstance(value, WF):
             ret = json.dumps(value.__dict__)
         elif isinstance(value, (str, unicode)):
+            value = value.replace('null', 'None')
             ret = json.dumps(eval(value))
         else:
             raise ValueError("value not a Graph instance")
