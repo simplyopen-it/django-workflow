@@ -26,7 +26,7 @@ app_path = os.path.join(rootpath, 'immigrationcenter')
 #             [dirnames.remove(name) for name in exclude if name in dirnames]
 #     return data_files
 
-setup(name = "django-ordermanagement",
+setup(name = "django-workflow",
       version = __version__,
       description = "Workflow editor for Django",
       long_description="Edit and Manage workflows to associate to your Django objects",
