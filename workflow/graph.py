@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from copy import deepcopy
+# pylint: disable=E0202
 
 __all__ = ['Graph']
 
@@ -69,11 +69,6 @@ class _GraphNode(object):
     @property
     def incoming(self):
         return self.__in.copy()
-
-    # def get(self, key, *args):
-    #     if key == 'name':
-    #         return self.name
-    #     return self.__attrs.get(key, *args)
 
     def add_incoming(self, node, _first=True):
         if not self.__in.get(node.name, False):
@@ -190,6 +185,16 @@ class Graph(object):
     # Getters/Settes and iterators #
     ################################
 
+    def filter(self, **kwargs):
+        ret = []
+        for node in self.itervalues():
+            ok = True
+            for attr, value in kwargs.iteritems():
+                ok &= getattr(node, attr) == value
+            if ok:
+                ret.append(node)
+        return ret
+
     def deepcopy(self):
         return self.__class__.parse(self.__dict__)
 
@@ -206,7 +211,7 @@ class Graph(object):
         self.__nodes['__HEAD__'] = self.__head.name
 
     def keys(self):
-         return [key for key in self.__nodes.keys() if key != '__HEAD__']
+        return [key for key in self.__nodes.keys() if key != '__HEAD__']
 
     def iterkeys(self):
         for key in self.__nodes.iterkeys():
@@ -217,17 +222,12 @@ class Graph(object):
         return [val for key, val in self.__nodes.items() if key != '__HEAD__']
 
     def itervalues(self):
-        for key, val in seld.__nodes.iteritems():
+        for key, val in self.__nodes.iteritems():
             if key != '__HEAD__':
                 yield val
 
     def items(self):
         return [(key, val) for key, val in self.__nodes.items() if key != '__HEAD__']
-
-    def itervalues(self):
-        for key, value in self.__nodes.itervalues():
-            if key != '__HEAD__':
-                yield (key, value)
 
     ##################################
     # Methods to modify the Workflow #
