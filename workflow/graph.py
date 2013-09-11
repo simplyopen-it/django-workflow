@@ -33,10 +33,12 @@ class _GraphNode(object):
     A _GraphNode is represented as a dictionary on print.
     '''
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, online=None, role=None, **kwargs):
         '''
         '''
         self.name = name
+        self.online = online
+        self.role = role
         self.__attrs = kwargs
         self.__in = {}
         self.__out = {}
@@ -48,19 +50,17 @@ class _GraphNode(object):
     def __dict__(self):
         ret = self.__attrs.copy()
         ret['name'] = self.name
+        ret['online'] = self.online
+        ret['role'] = self.role
         ret['outcoming'] = [elem.name for elem in self.outcoming.itervalues()]
         ret['incoming'] = [elem.name for elem in self.incoming.itervalues()]
         return ret
 
-    def __getitem__(self, key):
-        if key == 'name':
-            return self.name
-        return self.__attrs[key]
-
-    def __setitem__(self, key, value):
-        if key == 'name':
-            raise KeyError('Can not change node name')
-        self.__attrs[key] = value
+    def __getattr__(self, name):
+        try:
+            return self.__attrs['name']
+        except KeyError:
+            raise AttributeError("Object has no attribute '%s'" % name)
 
     @property
     def outcoming(self):
@@ -70,10 +70,10 @@ class _GraphNode(object):
     def incoming(self):
         return self.__in.copy()
 
-    def get(self, key, *args):
-        if key == 'name':
-            return self.name
-        return self.__attrs.get(key, *args)
+    # def get(self, key, *args):
+    #     if key == 'name':
+    #         return self.name
+    #     return self.__attrs.get(key, *args)
 
     def add_incoming(self, node, _first=True):
         if not self.__in.get(node.name, False):
