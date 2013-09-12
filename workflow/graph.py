@@ -192,7 +192,10 @@ class Graph(object):
         for node in self.itervalues():
             ok = True
             for attr, value in kwargs.iteritems():
-                ok &= getattr(node, attr) == value
+                if attr.endswith('__in'):
+                    ok &= getattr(node, attr.strip('__in')) in value
+                else:
+                    ok &= getattr(node, attr) == value
             if ok:
                 ret.append(node)
         return ret
