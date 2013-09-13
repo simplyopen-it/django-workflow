@@ -33,10 +33,13 @@ class _GraphNode(object):
     A _GraphNode is represented as a dictionary on print.
     '''
 
-    def __init__(self, name, online=None, roles=None, **kwargs):
+    def __init__(self, name, label=None, online=None, roles=None, **kwargs):
         '''
         '''
         self.name = name
+        if label is None:
+            label = name
+        self.label = label
         self.online = online
         if roles is None:
             roles = []
@@ -52,6 +55,7 @@ class _GraphNode(object):
     def __dict__(self):
         ret = self.__attrs.copy()
         ret['name'] = self.name
+        ret['label'] = self.label
         ret['online'] = self.online
         ret['roles'] = self.roles
         ret['outcoming'] = [elem.name for elem in self.outcoming.itervalues()]
