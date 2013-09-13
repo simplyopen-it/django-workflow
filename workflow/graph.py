@@ -238,6 +238,11 @@ class Graph(object):
     def items(self):
         return [(key, val) for key, val in self.__nodes.items() if key != '__HEAD__']
 
+    def iteritems(self):
+        for key, val in self.__nodes.iteritems():
+            if key != '__HEAD__':
+                yield (key, val)
+
     ##################################
     # Methods to modify the Workflow #
     ##################################
