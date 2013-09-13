@@ -207,8 +207,9 @@ class Graph(object):
     def get_nodes_by_roles(self, roles):
         if not hasattr(roles, '__iter__'):
             roles = [roles]
-        return [node for node in self.__nodes.itervalues()
-                if set(roles).intersection(node.roles)]
+        return [node for name, node in self.__nodes.iteritems()
+                if name != '__HEAD__' and \
+                set(roles).intersection(node.roles)]
 
     def deepcopy(self):
         return self.__class__.parse(self.__dict__)
