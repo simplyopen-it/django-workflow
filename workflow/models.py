@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=E1101
 from django.db import models
 from fields import WorkflowField
 from django.utils.log import getLogger
@@ -37,17 +38,22 @@ class WorkflowUser(models.Model):
     class Meta:
         abstract = True
 
+    def save(self, *args, **kwargs):
+        if self.workflow is not None and self.status is None:
+            self.set_status(self.workflow.head.name)
+        super(WorkflowUser, self).save(*args, **kwargs)
+
     def allowed_statuses(self):
         user = get_current_user()
         if user is not None:
             roles = set([group.name for group in user.groups.all()])
-            return set([
-                node.name
-                for node in self.workflow.get_nodes_by_roles(roles)]).\
-                    intersection(self.workflow[self.status].outcoming.keys())
-        else:
-            return self.workflow[self.status].outcoming.keys()
-        return ret
+            allowed_by_role = [node.name for node in
+                               self.workflow.get_nodes_by_roles(roles)]
+            out = self.workflow[self.status].outcoming
+            for name in allowed_by_role:
+                out.pop(name, None)
+            return out
+        return self.workflow[self.status].outcoming
 
     def can_travel(self, target):
         return self.workflow.can_travel(self.status, target)
@@ -66,7 +72,7 @@ class WorkflowUser(models.Model):
             logger.warning(e)
             raise e
         user = get_current_user()
-        if not self.workflow.has_permission(user, status):
+        if user is not None and not self.workflow.has_permission(user, status):
             e = RuntimeError(
                 "You don't have ther permission to switch to status '%s'" % \
                 status)
