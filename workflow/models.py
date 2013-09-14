@@ -37,6 +37,18 @@ class WorkflowUser(models.Model):
     class Meta:
         abstract = True
 
+    def allowed_statuses(self):
+        user = get_current_user()
+        if user is not None:
+            roles = set([group.name for group in user.groups.all()])
+            return set([
+                node.name
+                for node in self.workflow.get_nodes_by_roles(roles)]).\
+                    intersection(self.workflow[self.status].outcoming.keys())
+        else:
+            return self.workflow[self.status].outcoming.keys()
+        return ret
+
     def can_travel(self, target):
         return self.workflow.can_travel(self.status, target)
 
