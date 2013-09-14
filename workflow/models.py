@@ -40,7 +40,7 @@ class WorkflowUser(models.Model):
 
     def save(self, *args, **kwargs):
         if self.workflow is not None and self.status is None:
-            self.set_status(self.workflow.head.name)
+            self.status = self.workflow.head.name
         super(WorkflowUser, self).save(*args, **kwargs)
 
     def allowed_statuses(self):
