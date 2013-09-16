@@ -45,15 +45,15 @@ class WorkflowUser(models.Model):
 
     def allowed_statuses(self):
         user = get_current_user()
+        ret = self.workflow[self.status].outcoming
         if user is not None:
             roles = set([group.name for group in user.groups.all()])
             allowed_by_role = [node.name for node in
                                self.workflow.get_nodes_by_roles(roles)]
-            out = self.workflow[self.status].outcoming
-            for name in allowed_by_role:
-                out.pop(name, None)
-            return out.values()
-        return self.workflow[self.status].outcoming.values()
+            for key in ret.keys():
+                if key not in allowed_by_role:
+                    ret.pop(key, None)
+        return ret
 
     def can_travel(self, target):
         return self.workflow.can_travel(self.status, target)
