@@ -52,8 +52,8 @@ class WorkflowUser(models.Model):
             out = self.workflow[self.status].outcoming
             for name in allowed_by_role:
                 out.pop(name, None)
-            return out
-        return self.workflow[self.status].outcoming
+            return out.values()
+        return self.workflow[self.status].outcoming.values()
 
     def can_travel(self, target):
         return self.workflow.can_travel(self.status, target)
