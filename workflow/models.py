@@ -67,15 +67,15 @@ class WorkflowUser(models.Model):
     def set_status(self, status, *args, **kwargs):
         if not self.can_travel(status):
             e = RuntimeError(
-                "Can not change from status '%s' to '%s'" % \
-                (self.status, status))
+                "%s with id %s; Can not change from status '%s' to '%s'" % \
+                (self._meta.object_name, self.pk, self.status, status))
             logger.warning(e)
             raise e
         user = get_current_user()
         if user is not None and not self.workflow.has_permission(user, status):
             e = RuntimeError(
-                "You don't have ther permission to switch to status '%s'" % \
-                status)
+                "%s does not have the permission to switch to status '%s'" % \
+                (user, status))
             logger.warning(e)
             raise e
         target_obj = self.workflow[status]
