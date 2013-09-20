@@ -191,6 +191,24 @@ class Graph(object):
     # Getters/Settes and iterators #
     ################################
 
+    def bf_walk(self):
+        ''' Perform a Breadtth-First-Walk on the graph (starting
+        from head and return an ordered list.
+        '''
+        q = [self.head]
+        marked = {self.head.name : True}
+        # ret = [self.head]
+        yield self.head
+        while len(q) > 0:
+            curr = q.pop()
+            for elem in curr.outcoming.itervalues():
+                if not marked.get(elem.name, False):
+                    marked[elem.name] = True
+                    q.insert(0, elem)
+                    yield elem
+                    # ret.append(elem)
+        # return ret
+
     def filter(self, **kwargs):
         ret = []
         for node in self.itervalues():
