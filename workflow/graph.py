@@ -197,7 +197,6 @@ class Graph(object):
         '''
         q = [self.head]
         marked = {self.head.name : True}
-        # ret = [self.head]
         yield self.head
         while len(q) > 0:
             curr = q.pop()
@@ -206,8 +205,6 @@ class Graph(object):
                     marked[elem.name] = True
                     q.insert(0, elem)
                     yield elem
-                    # ret.append(elem)
-        # return ret
 
     def filter(self, **kwargs):
         ret = []
