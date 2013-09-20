@@ -267,6 +267,19 @@ class Graph(object):
             if key != '__HEAD__':
                 yield (key, val)
 
+    def iterarchs(self):
+        # FIXME: This has complexity O(n^2) check if there is a better
+        # implementation.
+        nodes = self.keys()
+        for src in nodes:
+            for dest in nodes:
+                if self[src].outcoming.get(dest, False):
+                    yield (src, dest)
+
+    def archs(self):
+        return [arch for arch in self.iterarchs()]
+
+
     ##################################
     # Methods to modify the Workflow #
     ##################################

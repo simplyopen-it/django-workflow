@@ -30,6 +30,14 @@ class Workflow(models.Model):
     def can_travel(self, status_in, status_out):
         return status_in in self.workflow[status_out].incoming.keys()
 
+    def iterarchs(self, user):
+        for arch in self.workflow.iterarchs():
+            if self.has_permission(user, arch[1]):
+                yield arch
+
+    def archs(self):
+        return [arch for arch in self.iterarchs()]
+
 
 class WorkflowUser(models.Model):
     status = models.CharField(max_length=255)
