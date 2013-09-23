@@ -1,3 +1,9 @@
+django-workflow (0.2.6) unstable; urgency=low
+
+  * v0.2.6
+
+ -- Marco Pattaro <mpattaro@gmail.com>  Mon, 23 Sep 2013 17:16:43 +0200
+
 django-workflow (0.2.5) unstable; urgency=low
 
   * v0.2.5
