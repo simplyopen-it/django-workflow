@@ -30,13 +30,13 @@ class Workflow(models.Model):
     def can_travel(self, status_in, status_out):
         return status_in in self.workflow[status_out].incoming.keys()
 
-    def iterarchs(self, user):
+    def iterarchs(self, user=None):
         for arch in self.workflow.iterarchs():
-            if self.has_permission(user, arch[1]):
+            if user is not None and self.has_permission(user, arch[1]):
                 yield arch
 
-    def archs(self):
-        return [arch for arch in self.iterarchs()]
+    def archs(self, user=None):
+        return [arch for arch in self.iterarchs(user)]
 
 
 class WorkflowUser(models.Model):
