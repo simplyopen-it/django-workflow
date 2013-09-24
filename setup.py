@@ -6,7 +6,7 @@ from workflow import __version__
 rootpath = os.path.dirname(__file__)
 if rootpath != '':
     os.chadir(rootpath)
-app_path = os.path.join(rootpath, 'immigrationcenter')
+app_path = os.path.join(rootpath, 'workflow')
 
 # def find_data(rootpath, exclude=None):
 #     if exclude is None:
