@@ -4,12 +4,15 @@ from django.db import models
 from fields import WorkflowField
 from django.utils.log import getLogger
 from django.contrib.aderit.generic_utils.middleware import get_current_user
+from . import managers
 
 logger = getLogger("workflow.models")
 
 class Workflow(models.Model):
     name = models.CharField(max_length=256, unique=True)
     workflow = WorkflowField()
+
+    objects = managers.WorkflowManager()
 
     def __unicode__(self):
         return unicode(self.name)
