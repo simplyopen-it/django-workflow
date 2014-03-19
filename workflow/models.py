@@ -5,8 +5,20 @@ from fields import WorkflowField
 from django.utils.log import getLogger
 from django.contrib.aderit.generic_utils.middleware import get_current_user
 from . import managers
+# South introspection rules for non standard fields
+try:
+    from south.modelsinspector import add_introspection_rules
+except ImportError:
+    pass
+else:
+    add_introspection_rules(
+        [],
+        ["^workflow.fields.WorkflowField"],
+     )
+
 
 logger = getLogger("workflow.models")
+
 
 class Workflow(models.Model):
     name = models.CharField(max_length=256, unique=True)
