@@ -1,3 +1,9 @@
+django-workflow (0.2.9) unstable; urgency=low
+
+  * fixed format
+
+ -- Michele Totaro <michele@uspublishers.com>  Fri, 05 Dec 2014 16:57:54 +0000
+
 django-workflow (0.2.8) unstable; urgency=low
 
   [ Marco Pattaro ]
