@@ -1,3 +1,16 @@
+django-workflow (0.2.8) unstable; urgency=low
+
+  [ Marco Pattaro ]
+  * Add south introspection rule
+  * auto push new tags
+  * fix typo
+
+  [ Michele Totaro ]
+  * rimozione dajaxice
+  * better build
+
+ -- Michele Totaro <michele@uspublishers.com>  Fri, 05 Dec 2014 16:55:52 +0000
+
 django-workflow (0.2.7) unstable; urgency=low
 
   * v0.2.7
