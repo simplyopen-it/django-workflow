@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E1101
 from django.db import models
-from fields import WorkflowField
+from workflow.fields import WorkflowField
 from django.utils.log import getLogger
-from django.contrib.aderit.generic_utils.middleware import get_current_user
-from . import managers
+# from django.contrib.aderit.generic_utils.middleware import get_current_user
+from simplyopen.middleware import get_current_user
+from workflow import managers
 # South introspection rules for non standard fields
 try:
     from south.modelsinspector import add_introspection_rules
