@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.db import models
-from graph import Graph as WF
+from workflow.graph import Graph as WF
 import json
 
 
@@ -31,9 +31,11 @@ class WorkflowField(models.TextField):
         ''' Python to DB value '''
         if isinstance(value, WF):
             ret = json.dumps(value.__dict__)
-        elif isinstance(value, (str, unicode)):
-            value = value.replace('null', 'None')
-            ret = json.dumps(eval(value))
+        # elif isinstance(value, (str, unicode)):
+        #     value = value.replace('null', 'None')
+        #     ret = json.dumps(eval(value))
+        # else:
+        #     raise ValueError("value not a Graph instance")
         else:
-            raise ValueError("value not a Graph instance")
+            ret = json.dumps(value)
         return ret
