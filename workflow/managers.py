@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 
-class WorkflowManager(models.Manager):
+class WorkflowManager(models.Manager): # pylint: disable=W0232
 
-    def get_node_superset(self, filter=None, exclude=None):
-        if filter is None:
-            filter = {}
+    def get_node_superset(self, filter_=None, exclude=None):
+        if filter_ is None:
+            filter_ = {}
         if exclude is None:
             exclude = {}
-        workflows = self.filter(**filter).exclude(**exclude)
-        ret = set()
-        for wf in workflows:
-            ret = ret.union(set([(node.name, node.label) for node in wf.itervalues()]))
-        return ret
+        return self.filter(**filter_).exclude(**exclude).values_list('node__name', 'node__label').distinct()

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=E0202
-
-__all__ = ['Graph']
-
-
-class _GraphNode(object):
+class GraphNode(object):
     ''' Reppresentation of an oriented-graph node.
 
     Each graph node must have a unique name in the graph where it
@@ -44,16 +39,16 @@ class _GraphNode(object):
         if roles is None:
             roles = []
         self.roles = roles
-        self.__attrs = kwargs
-        self.__in = {}
-        self.__out = {}
+        self._attrs = kwargs
+        self._in = {}
+        self._out = {}
 
     def __repr__(self):
         return repr(self.__dict__)
 
     @property
     def __dict__(self):
-        ret = self.__attrs.copy()
+        ret = self._attrs.copy()
         ret['name'] = self.name
         ret['label'] = self.label
         ret['online'] = self.online
@@ -64,28 +59,28 @@ class _GraphNode(object):
 
     def __getattr__(self, name):
         try:
-            return self.__attrs['name']
+            return self._attrs['name']
         except KeyError:
             raise AttributeError("Object has no attribute '%s'" % name)
 
     @property
     def outcoming(self):
-        return self.__out.copy()
+        return self._out.copy()
 
     @property
     def incoming(self):
-        return self.__in.copy()
+        return self._in.copy()
 
     def add_incoming(self, node, _first=True):
-        if not self.__in.get(node.name, False):
-            self.__in[node.name] = node
+        if not self._in.get(node.name, False):
+            self._in[node.name] = node
             if _first:
                 node.add_outcoming(self, _first=False)
             return node
 
     def add_outcoming(self, node, _first=True):
-        if not self.__out.get(node.name, False):
-            self.__out[node.name] = node
+        if not self._out.get(node.name, False):
+            self._out[node.name] = node
             if _first:
                 node.add_incoming(self, _first=False)
             return node
@@ -93,7 +88,7 @@ class _GraphNode(object):
     def del_incoming(self, node, _first=True):
         name = node.name
         try:
-            node = self.__in.pop(name)
+            node = self._in.pop(name)
         except KeyError:
             return None
         if _first:
@@ -103,7 +98,7 @@ class _GraphNode(object):
     def del_outcoming(self, node, _first=True):
         name = node.name
         try:
-            node = self.__out.pop(name)
+            node = self._out.pop(name)
         except KeyError:
             return None
         if _first:
@@ -144,11 +139,11 @@ class Graph(object):
         head = None
         if kwargs.has_key('head') and kwargs['head'] in names:
             head = kwargs.pop('head')
-        self.__nodes = {'__HEAD__': head}
+        self._nodes = {'__HEAD__': head}
         for name in names:
             self.add_node(name, **kwargs)
-        if self.__nodes['__HEAD__'] is not None:
-            self.__head = self.__nodes[self.__nodes['__HEAD__']]
+        if self._nodes['__HEAD__'] is not None:
+            self._head = self._nodes[self._nodes['__HEAD__']]
 
     @classmethod
     def parse(cls, wf_dict):
@@ -177,7 +172,7 @@ class Graph(object):
     @property
     def __dict__(self):
         ret = {}
-        for key, val in self.__nodes.iteritems():
+        for key, val in self._nodes.iteritems():
             try:
                 ret[key] = val.__dict__
             except AttributeError:
@@ -185,7 +180,7 @@ class Graph(object):
         return ret
 
     def __getitem__(self, key):
-        return self.__nodes[key]
+        return self._nodes[key]
 
     ################################
     # Getters/Settes and iterators #
@@ -211,8 +206,8 @@ class Graph(object):
         for node in self.itervalues():
             ok = True
             for attr, value in kwargs.iteritems():
-                if attr.endswith('__in'):
-                    ok &= getattr(node, attr.strip('__in')) in value
+                if attr.endswith('_in'):
+                    ok &= getattr(node, attr.strip('_in')) in value
                 else:
                     ok &= getattr(node, attr) == value
             if ok:
@@ -223,7 +218,7 @@ class Graph(object):
         if not hasattr(roles, '__iter__'):
             roles = [roles]
         return [
-            node for name, node in self.__nodes.iteritems()
+            node for name, node in self._nodes.iteritems()
             if name != '__HEAD__' and \
             (len(node.roles) == 0 or \
              set(roles).intersection(node.roles))]
@@ -232,38 +227,38 @@ class Graph(object):
         return self.__class__.parse(self.__dict__)
 
     def get(self, key, *args):
-        return self.__nodes.get(key, *args)
+        return self._nodes.get(key, *args)
 
     @property
     def head(self):
-        return self.__head
+        return self._head
 
     @head.setter
     def head(self, value):
-        self.__head = self.__nodes[value]
-        self.__nodes['__HEAD__'] = self.__head.name
+        self._head = self._nodes[value]
+        self._nodes['__HEAD__'] = self._head.name
 
     def keys(self):
-        return [key for key in self.__nodes.keys() if key != '__HEAD__']
+        return [key for key in self._nodes.keys() if key != '__HEAD__']
 
     def iterkeys(self):
-        for key in self.__nodes.iterkeys():
+        for key in self._nodes.iterkeys():
             if key != '__HEAD__':
                 yield key
 
     def values(self):
-        return [val for key, val in self.__nodes.items() if key != '__HEAD__']
+        return [val for key, val in self._nodes.items() if key != '__HEAD__']
 
     def itervalues(self):
-        for key, val in self.__nodes.iteritems():
+        for key, val in self._nodes.iteritems():
             if key != '__HEAD__':
                 yield val
 
     def items(self):
-        return [(key, val) for key, val in self.__nodes.items() if key != '__HEAD__']
+        return [(key, val) for key, val in self._nodes.items() if key != '__HEAD__']
 
     def iteritems(self):
-        for key, val in self.__nodes.iteritems():
+        for key, val in self._nodes.iteritems():
             if key != '__HEAD__':
                 yield (key, val)
 
@@ -287,11 +282,11 @@ class Graph(object):
     def add_node(self, name, head=False, inplace=True, **kwargs):
         if not inplace:
             self = self.deepcopy()
-        node = _GraphNode(name, **kwargs)
-        self.__nodes[node.name] = node
+        node = GraphNode(name, **kwargs)
+        self._nodes[node.name] = node
         if head:
-            self.__head = node
-            self.__nodes['__HEAD__'] = node.name
+            self._head = node
+            self._nodes['__HEAD__'] = node.name
         return self
 
     def add_nodes(self, *names, **kwargs):
@@ -305,9 +300,9 @@ class Graph(object):
     def del_node(self, name, inplace=True):
         if not inplace:
             self = self.deepcopy()
-        if self.__head.name == name:
+        if self._head.name == name:
             raise RuntimeError("Can not remove head")
-        node = self.__nodes.pop(name)
+        node = self._nodes.pop(name)
         for node_out in node.outcoming.values():
             node.del_outcoming(node_out)
         for node_in in node.incoming.values():
@@ -325,8 +320,8 @@ class Graph(object):
     def add_arch(self, name_out, name_in, inplace=True):
         if not inplace:
             self = self.deepcopy()
-        node_out = self.__nodes[name_out]
-        node_in = self.__nodes[name_in]
+        node_out = self._nodes[name_out]
+        node_in = self._nodes[name_in]
         node_out.add_outcoming(node_in)
         return self
 
@@ -341,8 +336,8 @@ class Graph(object):
     def del_arch(self, name_out, name_in, inplace=True):
         if not inplace:
             self = self.deepcopy()
-        node_out = self.__nodes[name_out]
-        node_in = self.__nodes[name_in]
+        node_out = self._nodes[name_out]
+        node_in = self._nodes[name_in]
         node_out.del_outcoming(node_in)
         return self
 

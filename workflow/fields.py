@@ -31,11 +31,15 @@ class WorkflowField(models.TextField):
         ''' Python to DB value '''
         if isinstance(value, WF):
             ret = json.dumps(value.__dict__)
-        # elif isinstance(value, (str, unicode)):
-        #     value = value.replace('null', 'None')
-        #     ret = json.dumps(eval(value))
-        # else:
-        #     raise ValueError("value not a Graph instance")
         else:
             ret = json.dumps(value)
         return ret
+
+    def south_field_triple(self):
+        ''' Returns a suitable description of this field for South. '''
+        # This method is not needed anymore after Django-1.6,
+        # in its place there is deconstruct().
+        from south.modelsinspector import introspector
+        args, kwargs = introspector(self)
+        kwargs.pop('path', None)
+        return ("workflow.fields.WorkflowField", args, kwargs)
