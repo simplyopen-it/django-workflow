@@ -55,7 +55,6 @@ class Migration(migrations.Migration):
                 ('label', models.CharField(max_length=200)),
                 ('online', models.SlugField(null=True, blank=True)),
                 ('attrs', django_extensions.db.fields.json.JSONField(blank=True)),
-                ('head', models.BooleanField(default=False)),
                 ('incomings', models.ManyToManyField(related_name='incomings_rel_+', to='workflow.WorkflowNode', blank=True)),
                 ('roles', models.ManyToManyField(to='auth.Group', blank=True)),
                 ('workflow', models.ForeignKey(to='workflow.Workflow')),
@@ -68,7 +67,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='workflow',
             name='head',
-            field=models.ForeignKey(to='workflow.WorkflowNode', null=True, related_name='+')
+            field=models.ForeignKey(to='workflow.WorkflowNode', null=True, blank=True, related_name='+',
+                                    on_delete=models.SET_NULL)
         ),
         migrations.RunPython(json2db),
         migrations.RemoveField(

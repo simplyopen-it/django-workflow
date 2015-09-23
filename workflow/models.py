@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 from django.utils.log import getLogger
-from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
 from django_extensions.db.fields.json import JSONField
 from simplyopen.middleware import get_current_user
@@ -14,7 +13,8 @@ logger = getLogger("workflow.models")
 class Workflow(models.Model):
     ''' An oriented graph to use as Workflow '''
     name = models.CharField(max_length=256, unique=True)
-    head = models.ForeignKey('WorkflowNode', null=True, related_name='+')
+    head = models.ForeignKey('WorkflowNode', null=True, blank=True, related_name='+',
+                             on_delete=models.SET_NULL)
 
     objects = managers.WorkflowManager()
 
@@ -114,15 +114,6 @@ class WorkflowNode(models.Model):
 
     def incoming(self):
         return dict([(node.name, node) for node in self.incomings.all()])
-
-    def clean(self):
-        # FIXME: can't use incomings to detect new nodes liked
-        if self.incomings.exclude(workflow=self.workflow).exists():
-            raise ValidationError({'incomings': 'All nodes must belong to the same Workflow'})
-
-    def save(self, *args, **kwargs):
-        # self.full_clean()
-        super(WorkflowNode, self).save(*args, **kwargs)
 
 
 class WorkflowUser(models.Model):
