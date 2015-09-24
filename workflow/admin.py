@@ -17,12 +17,10 @@ class WorkflowNodeInline(admin.StackedInline):
         'incomings',
         'outcomings',
     )
-    readonly_fields = (
-        'outcomings',
+    filter_horizontal = (
+        'incomings',
+        'roles',
     )
-
-    def outcomings(self, instance):
-        return ', '.join([node.label for node in instance.outcomings.all()])
 
 
 @register(Workflow)

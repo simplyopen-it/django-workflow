@@ -24,7 +24,6 @@ def json2db(apps, schema_editor):
                 name=node.name,
                 label=node.label,
                 online=node.online,
-                # attrs=node._attrs,
                 workflow=wf)
             wf_node.roles.add(*Group.objects.filter(name__in=node.roles))
             if node.name == wf_graph.head.name:
@@ -33,10 +32,6 @@ def json2db(apps, schema_editor):
         for out, _in in wf_graph.iterarchs():
             WorkflowNode.objects.get(name=_in, workflow=wf).incomings.add(
                 WorkflowNode.objects.get(name=out, workflow=wf))
-
-
-# def dummy(apps, schema_editor):
-#     pass
 
 
 class Migration(migrations.Migration):
