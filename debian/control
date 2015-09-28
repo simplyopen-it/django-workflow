@@ -9,7 +9,7 @@ X-Python-Version: >= 2.6
 
 Package: python-django-workflow
 Architecture: all
-Recommends:
+Recommends: python-pydot
 Depends: ${misc:Depends}, ${python:Depends}
 Description: Django workflow
  Manage and edit workflows for your Django applications.
