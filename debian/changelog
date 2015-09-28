@@ -1,3 +1,11 @@
+django-workflow (1.1.1) unstable; urgency=medium
+
+  * preview worlflow with pydot
+  * work correctly also with empty string as online_status
+  * add python-pydot as recomanded
+
+ -- Marco Pattaro <mpattaro@gmail.com>  Mon, 28 Sep 2015 12:31:50 +0200
+
 django-workflow (1.1.0) unstable; urgency=medium
 
   * drop use of graph module to handle workflows and keept them in the database
