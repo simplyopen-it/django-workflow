@@ -164,6 +164,6 @@ class WorkflowUser(models.Model):
             logger.warning(e)
             raise e
         target_obj = self.workflow[status]
-        if target_obj.online is not None:
+        if target_obj.online:
             status = self.set_online_status(target_obj.online, *args, **kwargs)
         self.status = status
