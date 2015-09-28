@@ -77,7 +77,7 @@ class Workflow(models.Model):
     def iterarchs(self, user=None):
         for src in self.nodes.all().iterator():
             for dest in src.outcomings.all().iterator():
-                if not self.has_permission(user, dest.name):
+                if (user is not None) and (not self.has_permission(user, dest.name)):
                     continue
                 yield (src.name, dest.name)
 
