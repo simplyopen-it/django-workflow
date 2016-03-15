@@ -1,3 +1,11 @@
+django-workflow (1.1.2) unstable; urgency=medium
+
+  * added base workflow fixtures
+  * added groups related to workflows roles
+  * added elements, and moved into master
+
+ -- Matteo Atti <matteo.atti@simplyopen.org>  Tue, 15 Mar 2016 12:30:25 +0100
+
 django-workflow (1.1.1) unstable; urgency=medium
 
   * preview worlflow with pydot
