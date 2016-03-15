@@ -1,30 +1,5 @@
 from setuptools import setup, find_packages
-from setuptools import distutils
-import os
 from workflow import __version__
-
-rootpath = os.path.dirname(__file__)
-if rootpath != '':
-    os.chadir(rootpath)
-app_path = os.path.join(rootpath, 'workflow')
-
-# def find_data(rootpath, exclude=None):
-#     if exclude is None:
-#         exclude = []
-#     data_files = []
-#     for dirpath, dirnames, filenames in os.walk(rootpath):
-#         for i, dirname in enumerate(dirnames):
-#             if dirname.startswith('.'):
-#                 del dirnames[i]
-#         if '__init__.py' in filenames:
-#             pass
-#         elif filenames:
-#             data_files.append(
-#                 [os.path.join(distutils.sysconfig.get_python_lib(), dirpath),
-#                  [os.path.join(dirpath, f) for f in filenames]])
-#         if dirnames:
-#             [dirnames.remove(name) for name in exclude if name in dirnames]
-#     return data_files
 
 setup(name = "django-workflow",
       version = __version__,
@@ -33,10 +8,9 @@ setup(name = "django-workflow",
       author = "SimplyOpen",
       author_email = "info@simplyopen.org",
       packages = find_packages(),
-#      package_data={'order_management': ['templates/order_management/*']},
       package_dir={'workflow': 'workflow'},
-#      data_files = find_data(app_path, exclude=['media', 'hidden']),
-      install_requires=['Django>=1.4'],
+      install_requires=['Django>=1.7'],
+      include_package_data = True,
       classifiers=[
           'Development Status :: 4 - Beta',
           'Environment :: Web Environment',

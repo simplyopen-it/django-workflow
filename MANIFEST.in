@@ -1,0 +1,7 @@
+include README.rst
+include CHANGES.txt
+include MANIFEST.in
+recursive-include workflow/fixtures *
+recursive-exclude * *.py[co]
+recursive-exclude * __pycache__
+recursive-exclude * *~
