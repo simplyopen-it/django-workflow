@@ -14,8 +14,7 @@ class WorkflowNodeInline(admin.StackedInline):
     max_num = None
     can_delete = True
     fields = (
-        ('name', 'label', 'online'),
-        'roles',
+        ('name', 'label'),
         'incomings',
         'outcomings',
     )

@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 from django.db import models
 from django.utils.text import slugify
-from django.core.exceptions import PermissionDenied
+from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.auth.models import Group
 from django_extensions.db.fields.json import JSONField
-from simplyopen.middleware import get_current_user
-from workflow import managers
+from . import managers
+
+TRAVEL_PREFIX = 'travelto_'
+VISIT_PREFIX = 'visit_'
 
 
+class WorkflowException(ValueError): pass
+
+
+@python_2_unicode_compatible
 class Workflow(models.Model):
     ''' An oriented graph to use as Workflow '''
     name = models.CharField(max_length=256, unique=True)
@@ -16,8 +24,8 @@ class Workflow(models.Model):
 
     objects = managers.WorkflowManager()
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return self.name
 
     def __getitem__(self, item):
         try:
@@ -30,11 +38,6 @@ class Workflow(models.Model):
             return self[value]
         except KeyError:
             return default
-
-    @property
-    def workflow(self):
-        # For compatibility
-        return self
 
     def bf_walk(self):
         ''' Traverse the workflow in a breadth-first walk '''
@@ -59,17 +62,12 @@ class Workflow(models.Model):
         return [key for key in self.iterkeys()]
 
     def iterkeys(self):
-        for node in self.itervalues():
-            yield node.name
-
-    def get_nodes_by_roles(self, roles):
-        return self.nodes.filter(roles__name__in=roles)
+        for node_name in self.nodes.all().values('name').itervalues():
+            yield node_name['name']
 
     def has_permission(self, user, status):
-        codename = 'workflow.travelto_%s' % slugify('/'.join([self.name, status]))
+        codename = 'workflow.%s%s' % (TRAVEL_PREFIX, slugify(unicode(self[status])))
         return user.has_perm(codename)
-        # roles = set(self.nodes.get(name=status).roles.all())
-        # return len(roles) == 0 or set(user.groups.all()).intersection(roles)
 
     def can_travel(self, status_in, status_out):
         return self.nodes.get(name=status_out).incomings.filter(name=status_in).exists()
@@ -85,6 +83,7 @@ class Workflow(models.Model):
         return [arch for arch in self.iterarchs(user)]
 
 
+@python_2_unicode_compatible
 class WorkflowNode(models.Model):
     ''' A workflow node '''
     name = models.SlugField(db_index=True)
@@ -99,24 +98,16 @@ class WorkflowNode(models.Model):
         symmetrical=False)
     workflow = models.ForeignKey(Workflow, related_name='nodes', related_query_name='node')
 
-    class Meta:                 # pylint: disable=W0232
+    class Meta: # pylint: disable=W0232
         unique_together = ('name', 'workflow')
 
-    def __unicode__(self):
-        return self.workflow.name + '/' + self.name
-
-    def __getitem__(self, item):
-        return getattr(self, item)
-
-    @property
-    def outcoming(self):
-        return dict([(node.name, node) for node in self.outcomings.all()])
-
-    def incoming(self):
-        return dict([(node.name, node) for node in self.incomings.all()])
+    def __str__(self):
+        return ' '.join([self.workflow.name, self.name])
 
 
-class WorkflowUser(models.Model):
+class WorkflowModel(models.Model):
+    ''' An abstract model to make use of workflows.
+    '''
     # pylint: disable=E1136
     status = models.CharField(max_length=255)
     workflow = models.ForeignKey(Workflow)
@@ -125,40 +116,32 @@ class WorkflowUser(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
-        if self.workflow is not None and self.status is None:
-            self.status = self.workflow.head.name
-        super(WorkflowUser, self).save(*args, **kwargs)
+        if self.workflow is not None:
+            if self.status is None:
+                self.status = self.workflow.head.name
+            elif self.status not in self.workflow.keys():
+                raise WorkflowException('Invalid status %s' % self.status)
+        super(WorkflowModel, self).save(*args, **kwargs)
 
-    def allowed_statuses(self):
-        user = get_current_user()
-        ret = dict([(node.name, node) for node in self.workflow[self.status].outcomings.all()])
+    def allowed_statuses(self, user=None):
+        ''' Return a dictionary of all statuses recheabe from the current one.
+        If user is specified, alse take into account user permissions.
+        '''
         if user is not None:
             return dict([(node.name, node) for node in self.workflow[self.status].outcomings.all()
-                        if user.has_perm('workflow.travelto_%s')])
-            # roles = set([group.name for group in user.groups.all()])
-            # allowed_by_role = [node.name for node in
-            #                    self.workflow.get_nodes_by_roles(roles)]
-            # for key in ret.keys():
-            #     if key not in allowed_by_role:
-            #         ret.pop(key, None)
-        return ret
+                         if user.has_perm('workflow.%s%s' % (TRAVEL_PREFIX, slugify(unicode(node))))])
+        return dict([(node.name, node) for node in self.workflow[self.status].outcomings.all()])
 
     def can_travel(self, target):
+        ''' Check if the target status is reacheable from the current status. '''
         return self.workflow.can_travel(self.status, target)
 
     def get_status(self):
+        ''' Return the WornfloNode object for the current status. '''
         return self.workflow[self.status]
 
-    def set_online_status(self, status, *args, **kwargs):
-        return status
-
     def set_status(self, status, *args, **kwargs):
+        ''' Controlled status set. '''
         if not self.can_travel(status):
-            raise PermissionDenied()
-        user = get_current_user()
-        if (user is not None) and (not self.workflow.has_permission(user, status)):
-            raise PermissionDenied()
-        target_obj = self.workflow[status]
-        if target_obj.online:
-            status = self.set_online_status(target_obj.online, *args, **kwargs)
+            raise WorkflowException("Can not travel from '%s' to '%s'" % (self.status, status))
         self.status = status

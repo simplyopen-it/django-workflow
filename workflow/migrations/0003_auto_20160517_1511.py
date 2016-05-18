@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 from django.utils.text import slugify
+from ..models import TRAVEL_PREFIX, VISIT_PREFIX
 
 
 def create_permissions(apps, schema_editor):
@@ -11,11 +12,11 @@ def create_permissions(apps, schema_editor):
     Permission = apps.get_model('auth', 'Permission')
     content_type = ContentType.objects.get_for_model(WorkflowNode)
     for node in WorkflowNode.objects.all().values('name', 'workflow__name'):
-        node_unicode = '/'.join([node['workflow__name'], node['name']])
-        Permission.objects.create(codename='travelto_%s' % slugify(node_unicode),
+        node_unicode = ' '.join([node['workflow__name'], node['name']])
+        Permission.objects.create(codename='%s%s' % (TRAVEL_PREFIX, slugify(node_unicode)),
                                   name="Can travel to %s" % node_unicode,
                                   content_type=content_type)
-        Permission.objects.create(codename='visit_%s' % slugify(node_unicode),
+        Permission.objects.create(codename='%s%s' % (VISIT_PREFIX, slugify(node_unicode)),
                                   name="Can visit to %s" % node_unicode,
                                   content_type=content_type)
 
@@ -24,8 +25,8 @@ def delete_permissions(apps, schema_editor):
     ContentType = apps.get_model('contenttypes', 'ContentType')
     Permission = apps.get_model('auth', 'Permission')
     content_type = ContentType.objects.get_for_model(WorkflowNode)
-    Permission.objects.filter(models.Q(codename__startswith='travelto_') | \
-                              models.Q(codename__startswith='visit_'),
+    Permission.objects.filter(models.Q(codename__startswith=TRAVEL_PREFIX) | \
+                              models.Q(codename__startswith=VISIT_PREFIX),
                               content_type=content_type).delete()
 
 def assign_permissions(apps, schema_editor):
@@ -36,7 +37,7 @@ def assign_permissions(apps, schema_editor):
     Group = apps.get_model('auth', 'Group')
     for group in Group.objects.all():
         nodes = WorkflowNode.objects.filter(roles=group).values('name', 'workflow__name')
-        codenames = ['travelto_%s' % slugify('/'.join([node['workflow__name'], node['name']]))
+        codenames = ['%s%s' % (TRAVEL_PREFIX, slugify('/'.join([node['workflow__name'], node['name']])))
                      for node in nodes]
         permissions = Permission.objects.filter(codename__in=codenames)
         group.permissions.add(*permissions)
