@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 from django.db import models
-from django.utils.log import getLogger
+from django.utils.text import slugify
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Group
 from django_extensions.db.fields.json import JSONField
 from simplyopen.middleware import get_current_user
 from workflow import managers
-
-
-logger = getLogger("workflow.models")
 
 
 class Workflow(models.Model):
@@ -68,8 +66,10 @@ class Workflow(models.Model):
         return self.nodes.filter(roles__name__in=roles)
 
     def has_permission(self, user, status):
-        roles = set(self.nodes.get(name=status).roles.all())
-        return len(roles) == 0 or set(user.groups.all()).intersection(roles)
+        codename = 'workflow.travelto_%s' % slugify('/'.join([self.name, status]))
+        return user.has_perm(codename)
+        # roles = set(self.nodes.get(name=status).roles.all())
+        # return len(roles) == 0 or set(user.groups.all()).intersection(roles)
 
     def can_travel(self, status_in, status_out):
         return self.nodes.get(name=status_out).incomings.filter(name=status_in).exists()
@@ -117,10 +117,11 @@ class WorkflowNode(models.Model):
 
 
 class WorkflowUser(models.Model):
+    # pylint: disable=E1136
     status = models.CharField(max_length=255)
     workflow = models.ForeignKey(Workflow)
 
-    class Meta:                 # pylint: disable=W0232
+    class Meta: # pylint: disable=W0232
         abstract = True
 
     def save(self, *args, **kwargs):
@@ -132,12 +133,14 @@ class WorkflowUser(models.Model):
         user = get_current_user()
         ret = dict([(node.name, node) for node in self.workflow[self.status].outcomings.all()])
         if user is not None:
-            roles = set([group.name for group in user.groups.all()])
-            allowed_by_role = [node.name for node in
-                               self.workflow.get_nodes_by_roles(roles)]
-            for key in ret.keys():
-                if key not in allowed_by_role:
-                    ret.pop(key, None)
+            return dict([(node.name, node) for node in self.workflow[self.status].outcomings.all()
+                        if user.has_perm('workflow.travelto_%s')])
+            # roles = set([group.name for group in user.groups.all()])
+            # allowed_by_role = [node.name for node in
+            #                    self.workflow.get_nodes_by_roles(roles)]
+            # for key in ret.keys():
+            #     if key not in allowed_by_role:
+            #         ret.pop(key, None)
         return ret
 
     def can_travel(self, target):
@@ -151,18 +154,10 @@ class WorkflowUser(models.Model):
 
     def set_status(self, status, *args, **kwargs):
         if not self.can_travel(status):
-            e = RuntimeError(
-                "%s with id %s; Can not change from status '%s' to '%s'" % \
-                (self._meta.object_name, self.pk, self.status, status))
-            logger.warning(e)
-            raise e
+            raise PermissionDenied()
         user = get_current_user()
-        if user is not None and not self.workflow.has_permission(user, status):
-            e = RuntimeError(
-                "%s does not have the permission to switch to status '%s'" % \
-                (user, status))
-            logger.warning(e)
-            raise e
+        if (user is not None) and (not self.workflow.has_permission(user, status)):
+            raise PermissionDenied()
         target_obj = self.workflow[status]
         if target_obj.online:
             status = self.set_online_status(target_obj.online, *args, **kwargs)
