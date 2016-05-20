@@ -24,6 +24,11 @@ class Workflow(models.Model):
 
     objects = managers.WorkflowManager()
 
+    class Meta:
+        permissions = (
+            ('force_status', 'Can force workflow status'),
+        )
+
     def __str__(self):
         return self.name
 
@@ -62,7 +67,7 @@ class Workflow(models.Model):
         return [key for key in self.iterkeys()]
 
     def iterkeys(self):
-        for node_name in self.nodes.all().values('name').itervalues():
+        for node_name in self.nodes.all().values('name').iterator():
             yield node_name['name']
 
     def has_permission(self, user, status):
@@ -120,7 +125,7 @@ class WorkflowModel(models.Model):
             if self.status is None:
                 self.status = self.workflow.head.name
             elif self.status not in self.workflow.keys():
-                raise WorkflowException('Invalid status %s' % self.status)
+                raise WorkflowException("Invalid status '%s'" % self.status)
         super(WorkflowModel, self).save(*args, **kwargs)
 
     def allowed_statuses(self, user=None):
