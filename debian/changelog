@@ -1,3 +1,13 @@
+django-workflow (1.2.0) unstable; urgency=medium
+
+  * permissions
+  * move permission checking in view
+  * add force_status permission and improve signals
+  * update version
+  * add dh-python to Build-Depends
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Tue, 31 May 2016 15:02:18 +0200
+
 django-workflow (1.1.2) unstable; urgency=medium
 
   * added base workflow fixtures
