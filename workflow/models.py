@@ -4,12 +4,17 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.text import slugify
 from django.utils.encoding import python_2_unicode_compatible
-from django.contrib.auth.models import Group
 from django_extensions.db.fields.json import JSONField
 from . import managers
 
 TRAVEL_PREFIX = 'travelto_'
 VISIT_PREFIX = 'visit_'
+
+def get_travel_codename(node):
+    return 'workflow.%s%s' % (TRAVEL_PREFIX, slugify(unicode(node)))
+
+def get_visit_codename(node):
+    return 'workflow.%s%s' % (VISIT_PREFIX, slugify(unicode(node)))
 
 
 class WorkflowException(ValueError): pass
@@ -19,12 +24,11 @@ class WorkflowException(ValueError): pass
 class Workflow(models.Model):
     ''' An oriented graph to use as Workflow '''
     name = models.CharField(max_length=256, unique=True)
-    head = models.ForeignKey('WorkflowNode', null=True, blank=True, related_name='+',
-                             on_delete=models.SET_NULL)
+    head = models.SlugField(blank=True, default='')
 
     objects = managers.WorkflowManager()
 
-    class Meta:
+    class Meta:  # pylint: disable=W0232
         permissions = (
             ('force_status', 'Can force workflow status'),
         )
@@ -38,6 +42,9 @@ class Workflow(models.Model):
         except WorkflowNode.DoesNotExist:
             raise KeyError(item)
 
+    def natural_key(self):
+        return (self.name,)
+
     def get(self, value, default=None):
         try:
             return self[value]
@@ -46,12 +53,13 @@ class Workflow(models.Model):
 
     def bf_walk(self):
         ''' Traverse the workflow in a breadth-first walk '''
-        q = [self.head]
-        marked = {self.head.pk: True}
-        yield self.head
+        head = WorkflowNode.objects.get(name=self.head)
+        q = [head]
+        marked = {head.pk: True}
+        yield head
         while len(q) > 0:
             curr = q.pop()
-            for elem in curr.outcomings.all().iterator():
+            for elem in self.nodes.filter(name__in=curr.outcomings).iterator():
                 if not marked.get(elem.pk, False):
                     marked[elem.pk] = True
                     q.insert(0, elem)
@@ -67,22 +75,21 @@ class Workflow(models.Model):
         return [key for key in self.iterkeys()]
 
     def iterkeys(self):
-        for node_name in self.nodes.all().values('name').iterator():
-            yield node_name['name']
+        return self.nodes.values_list('name', flat=True).iterator()
 
     def has_permission(self, user, status):
-        codename = 'workflow.%s%s' % (TRAVEL_PREFIX, slugify(unicode(self[status])))
+        codename = get_travel_codename(self[status])
         return user.has_perm(codename)
 
     def can_travel(self, status_in, status_out):
-        return self.nodes.get(name=status_out).incomings.filter(name=status_in).exists()
+        return status_out in self.nodes.get(name=status_in).outcomings
 
     def iterarchs(self, user=None):
         for src in self.nodes.all().iterator():
-            for dest in src.outcomings.all().iterator():
-                if (user is not None) and (not self.has_permission(user, dest.name)):
+            for dest_name in iter(src.outcomings):
+                if (user is not None) and (not self.has_permission(user, dest_name)):
                     continue
-                yield (src.name, dest.name)
+                yield (src.name, dest_name)
 
     def archs(self, user=None):
         return [arch for arch in self.iterarchs(user)]
@@ -93,21 +100,20 @@ class WorkflowNode(models.Model):
     ''' A workflow node '''
     name = models.SlugField(db_index=True)
     label = models.CharField(max_length=200)
-    online = models.SlugField(null=True, blank=True)
-    roles = models.ManyToManyField(Group, blank=True)
-    attrs = JSONField(default='{}')
-    incomings = models.ManyToManyField(
-        'self', blank=True,
-        related_name='outcomings',
-        related_query_name='outcoming',
-        symmetrical=False)
+    outcomings = JSONField(default=list)
     workflow = models.ForeignKey(Workflow, related_name='nodes', related_query_name='node')
+
+    objects = managers.WorkflowNodeManager()
 
     class Meta: # pylint: disable=W0232
         unique_together = ('name', 'workflow')
 
     def __str__(self):
         return ' '.join([self.workflow.name, self.name])
+
+    def natural_key(self):
+        return self.workflow.natural_key() + (self.name,)
+    natural_key.dependencies = ['workflow.workflow']
 
 
 class WorkflowModel(models.Model):
@@ -123,19 +129,20 @@ class WorkflowModel(models.Model):
     def save(self, *args, **kwargs):
         if self.workflow is not None:
             if self.status is None:
-                self.status = self.workflow.head.name
+                self.status = self.workflow.head
             elif self.status not in self.workflow.keys():
-                raise WorkflowException("Invalid status '%s'" % self.status)
+                raise WorkflowException("Invalid status '%s'" % self.pstatus)
         super(WorkflowModel, self).save(*args, **kwargs)
 
     def allowed_statuses(self, user=None):
         ''' Return a dictionary of all statuses recheabe from the current one.
         If user is specified, alse take into account user permissions.
         '''
+        qs = WorkflowNode.objects.filter(workflow=self.workflow, name__in=self.workflow[self.status].outcomings)
         if user is not None:
-            return dict([(node.name, node) for node in self.workflow[self.status].outcomings.all()
-                         if user.has_perm('workflow.%s%s' % (TRAVEL_PREFIX, slugify(unicode(node))))])
-        return dict([(node.name, node) for node in self.workflow[self.status].outcomings.all()])
+            return dict([(node.name, node) for node in qs.iterator()
+                         if user.has_perm(get_travel_codename(node))])
+        return dict([(node.name, node) for node in qs.iterator()])
 
     def can_travel(self, target):
         ''' Check if the target status is reacheable from the current status. '''

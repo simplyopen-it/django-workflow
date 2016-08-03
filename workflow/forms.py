@@ -6,6 +6,7 @@ from workflow.models import WorkflowNode, Workflow
 
 
 class WorkflowForm(forms.ModelForm):
+    head = forms.ChoiceField(choices=list, required=False)
 
     class Meta:                 # pylint: disable=W0232
         model = Workflow
@@ -14,28 +15,20 @@ class WorkflowForm(forms.ModelForm):
     def __init__(self, data=None, files=None, instance=None, *args, **kwargs):
         super(WorkflowForm, self).__init__(data=data, files=files, instance=instance, *args, **kwargs)
         if instance is not None:
-            self.fields['head'].queryset = instance.nodes.all()
-        else:
-            self.fields['head'].queryset = WorkflowNode.objects.none()
-
+            self.fields['head'].choices = instance.nodes.values_list('name', 'label')
 
 
 class WorkflowNodeForm(forms.ModelForm):
-
-    outcomings = forms.models.ModelMultipleChoiceField(
-        WorkflowNode.objects.none(),
+    outcomings = forms.MultipleChoiceField(
+        choices=tuple(),
         required=False,
-        widget=admin_widgets.FilteredSelectMultiple('Outcomings', False)
-    )
+        widget=admin_widgets.FilteredSelectMultiple('Outcomings', False))
 
     class Meta:                 # pylint: disable=W0232
         model = WorkflowNode
         fields = [
             'name',
             'label',
-            'online',
-            'roles',
-            'incomings',
         ]
 
     def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
@@ -45,24 +38,11 @@ class WorkflowNodeForm(forms.ModelForm):
             initial = {}
         if instance is not None:
             initial.update({
-                'outcomings': instance.outcomings.all(),
+                'outcomings': instance.outcomings,
             })
         super(WorkflowNodeForm, self).__init__(
             data=data, files=files, auto_id=auto_id, prefix=prefix,
             initial=initial, error_class=error_class, label_suffix=label_suffix,
             empty_permitted=empty_permitted, instance=instance)
         if instance is not None:
-            self.fields['incomings'].queryset = instance.workflow.nodes.exclude(pk=instance.pk)
-            self.fields['outcomings'].queryset = instance.workflow.nodes.exclude(pk=instance.pk)
-        else:
-            self.fields['incomings'].queryset = Workflow.objects.none()
-
-
-    def save(self, commit=True):
-        instance = super(WorkflowNodeForm, self).save(commit=commit)
-        try:
-            instance.outcomings.clear()
-            instance.outcomings.add(*self.cleaned_data.get('outcomings'))
-        except ValueError:
-            pass
-        return instance
+            self.fields['outcomings'].choices = instance.workflow.nodes.values_list('name', 'label')

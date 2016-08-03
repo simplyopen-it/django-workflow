@@ -15,12 +15,7 @@ class WorkflowNodeInline(admin.StackedInline):
     can_delete = True
     fields = (
         ('name', 'label'),
-        'incomings',
         'outcomings',
-    )
-    filter_horizontal = (
-        'incomings',
-        'roles',
     )
 
 

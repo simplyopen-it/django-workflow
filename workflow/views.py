@@ -3,7 +3,7 @@ from django.core.urlresolvers import reverse
 from django.views.generic import View
 from django.views.generic.detail import SingleObjectMixin
 from django.core.exceptions import PermissionDenied
-from . models import TRAVEL_PREFIX
+from .models import get_travel_codename
 
 
 class SetStatusView(SingleObjectMixin, View):
@@ -18,7 +18,7 @@ class SetStatusView(SingleObjectMixin, View):
         return self.get_response()
 
     def set_status(self, request, status):
-        if not request.user.has_perm('workflow.%s%s' % (TRAVEL_PREFIX, status)):
+        if not request.user.has_perm(get_travel_codename(status)):
             raise PermissionDenied()
         self.object.set_status(status)
 
