@@ -51,9 +51,12 @@ class Workflow(models.Model):
         except KeyError:
             return default
 
+    def get_head(self):
+        return self.get(self.head)
+
     def bf_walk(self):
         ''' Traverse the workflow in a breadth-first walk '''
-        head = WorkflowNode.objects.get(name=self.head)
+        head = WorkflowNode.objects.get(name=self.head, workflow=self)
         q = [head]
         marked = {head.pk: True}
         yield head
