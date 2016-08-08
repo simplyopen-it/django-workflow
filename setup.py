@@ -9,7 +9,10 @@ setup(name = "django-workflow",
       author_email = "info@simplyopen.org",
       packages = find_packages(),
       package_dir={'workflow': 'workflow'},
-      install_requires=['Django>=1.7'],
+      install_requires=[
+          'Django>=1.7',
+          'django-extensions>=1.3.10',
+      ],
       include_package_data = True,
       classifiers=[
           'Development Status :: 4 - Beta',
