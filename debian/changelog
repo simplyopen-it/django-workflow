@@ -1,3 +1,11 @@
+django-workflow (1.3.0) unstable; urgency=medium
+
+  * remove circular relations to ease serialization
+  * fix bf_walk() and add get_head()
+  * add dependency from django-extensions
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Mon, 08 Aug 2016 16:46:52 +0200
+
 django-workflow (1.2.0) unstable; urgency=medium
 
   * permissions
