@@ -3,8 +3,8 @@ import os
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.decorators import register
-from workflow.forms import WorkflowNodeForm, WorkflowForm
-from workflow.models import Workflow, WorkflowNode
+from .forms import WorkflowNodeForm, WorkflowForm
+from .models import Workflow, WorkflowNode
 
 
 class WorkflowNodeInline(admin.StackedInline):
