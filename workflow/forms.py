@@ -46,3 +46,8 @@ class WorkflowNodeForm(forms.ModelForm):
             empty_permitted=empty_permitted, instance=instance)
         if instance is not None:
             self.fields['outcomings'].choices = instance.workflow.nodes.values_list('name', 'label')
+
+    def save(self, commit=True):
+        if not self.cleaned_data.get('outcomings', []):
+            self.instance.outcomings = []
+        return super(WorkflowNodeForm, self).save(commit=commit)
