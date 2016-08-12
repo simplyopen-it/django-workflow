@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-from django_extensions.db.fields.json import JSONField
+from ..fields import JSONListUniqueField
 
 
 class Migration(migrations.Migration):
@@ -20,8 +20,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='workflownode',
             name='outcomings_new',
-            field=JSONField(default=list),
+            field=JSONListUniqueField(default=list),
         ),
-
-
     ]

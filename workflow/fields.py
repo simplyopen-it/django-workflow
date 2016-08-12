@@ -1,7 +1,19 @@
 # -*- coding: utf-8 -*-
 from django.db import models
+from django_extensions.db.fields.json import JSONField
 from workflow.graph import Graph as WF
 import json
+
+
+class JSONListUniqueField(JSONField):
+
+    def pre_save(self, model_instance, add):
+        value = super(JSONListUniqueField, self).pre_save(model_instance, add)
+        # make values unique
+        if value is not None:
+            value = list(set(value))
+            setattr(model_instance, self.attname, value)
+        return value
 
 
 class WorkflowField(models.TextField):

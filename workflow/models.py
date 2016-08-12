@@ -4,7 +4,8 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.text import slugify
 from django.utils.encoding import python_2_unicode_compatible
-from django_extensions.db.fields.json import JSONField
+# from django_extensions.db.fields.json import JSONField
+from . import fields
 from . import managers
 
 TRAVEL_PREFIX = 'travelto_'
@@ -103,7 +104,7 @@ class WorkflowNode(models.Model):
     ''' A workflow node '''
     name = models.SlugField(db_index=True)
     label = models.CharField(max_length=200)
-    outcomings = JSONField(default=list)
+    outcomings = fields.JSONListUniqueField(default=list)
     workflow = models.ForeignKey(Workflow, related_name='nodes', related_query_name='node')
 
     objects = managers.WorkflowNodeManager()
