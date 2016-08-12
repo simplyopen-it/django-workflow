@@ -51,3 +51,14 @@ class WorkflowNodeForm(forms.ModelForm):
         if not self.cleaned_data.get('outcomings', []):
             self.instance.outcomings = []
         return super(WorkflowNodeForm, self).save(commit=commit)
+
+
+class WorkflowNodeAdminForm(WorkflowNodeForm):
+
+    class Meta:                 # pylint: disable=W0232
+        model = WorkflowNode
+        fields = [
+            'workflow',
+            'name',
+            'label',
+        ]

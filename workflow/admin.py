@@ -3,8 +3,15 @@ import os
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.decorators import register
-from workflow.forms import WorkflowNodeForm, WorkflowForm
-from workflow.models import Workflow, WorkflowNode
+from .forms import (
+    WorkflowNodeForm,
+    WorkflowNodeAdminForm,
+    WorkflowForm,
+)
+from .models import (
+    Workflow,
+    WorkflowNode,
+)
 
 
 class WorkflowNodeInline(admin.StackedInline):
@@ -57,3 +64,20 @@ class WorkflowAdmin(admin.ModelAdmin):
         dot.plot(instance, out_file)
         return '<img src="%sworkflow/%s.png">' % (settings.MEDIA_URL, instance.name)
     preview.allow_tags = True
+
+
+@register(WorkflowNode)
+class WorkflowNodeAdmin(admin.ModelAdmin):
+    list_display= (
+        'name',
+        'workflow',
+        'outcomings',
+    )
+    form = WorkflowNodeAdminForm
+    list_filter = (
+        'workflow',
+    )
+    search_fields = (
+        'name',
+        'label',
+    )
