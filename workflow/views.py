@@ -1,9 +1,28 @@
-from django.http import HttpResponseRedirect
+import tempfile
+from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
-from django.views.generic import View
+from django.views.generic import View, DetailView
 from django.views.generic.detail import SingleObjectMixin
 from django.core.exceptions import PermissionDenied
-from .models import get_travel_codename
+from . import dot
+from .models import (
+    get_travel_codename,
+    Workflow,
+)
+
+
+class WorkflowPreviewView(DetailView):
+
+    model = Workflow
+
+    def render_to_response(self, context, **kwargs):
+        response = HttpResponse(content_type='image/png')
+        response['Content-Disposition'] = 'attachment;filename=%s.png' % self.object.name
+        # pydot in testing is patched to accept file-like objects but
+        # the upstream is not that clever, if we want to make this app
+        # porta
+        dot.plot(self.object, response)
+        return response
 
 
 class SetStatusView(SingleObjectMixin, View):

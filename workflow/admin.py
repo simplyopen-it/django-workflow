@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import os
 from django.conf import settings
+from django.conf.urls import url
+from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.contrib.admin.decorators import register
 from .forms import (
@@ -12,6 +16,7 @@ from .models import (
     Workflow,
     WorkflowNode,
 )
+from .views import WorkflowPreviewView
 
 
 class WorkflowNodeInline(admin.StackedInline):
@@ -53,25 +58,53 @@ class WorkflowAdmin(admin.ModelAdmin):
         WorkflowNodeInline,
     )
 
+    def get_urls(self):
+        urls = super(WorkflowAdmin, self).get_urls()
+        urls.append(url(r'workflow/preview/(?P<pk>[0-9]+)$',
+                        self.admin_site.admin_view(WorkflowPreviewView.as_view()),
+                        name='workflow_preview'))
+        return urls
+
     def preview(self, instance):
-        try:
-            from workflow import dot
-        except ImportError:
-            return 'module <b>pydot</b> not installed'
-        out_file = os.path.join(settings.MEDIA_ROOT, 'workflow', '%s.png' % instance.name)
-        if not os.path.isdir(os.path.dirname(out_file)):
-            os.makedirs(os.path.dirname(out_file))
-        dot.plot(instance, out_file)
-        return '<img src="%sworkflow/%s.png">' % (settings.MEDIA_URL, instance.name)
+        # try:
+        #     from workflow import dot
+        # except ImportError:
+        #     return 'module <b>pydot</b> not installed'
+        # out_file = os.path.join(settings.MEDIA_ROOT, 'workflow', '%s.png' % instance.name)
+        # if not os.path.isdir(os.path.dirname(out_file)):
+        #     os.makedirs(os.path.dirname(out_file))
+        # dot.plot(instance, out_file)
+        # return '<img src="%sworkflow/%s.png">' % (settings.MEDIA_URL, instance.name)
+        return '<a href="%s">Preview</a>' % reverse('admin:workflow_preview', args=(instance.pk,))
     preview.allow_tags = True
 
 
 @register(WorkflowNode)
 class WorkflowNodeAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None, {
+            'fields': (
+                'workflow',
+                'name',
+                'label',
+                'outcomings',
+            ),
+        }),
+        ('Close Nodes', {
+            'fields': (
+                ('pretty_incomings', 'pretty_outcomings'),
+            ),
+        }),
+    ]
     list_display= (
         'name',
         'workflow',
-        'outcomings',
+        'pretty_incomings',
+        'pretty_outcomings',
+    )
+    readonly_fields = (
+        'pretty_incomings',
+        'pretty_outcomings',
     )
     form = WorkflowNodeAdminForm
     list_filter = (
@@ -81,3 +114,23 @@ class WorkflowNodeAdmin(admin.ModelAdmin):
         'name',
         'label',
     )
+
+    def _pretty_proximity_list(self, instance, direction):
+        out = ['<ul>']
+        close_nodes = WorkflowNode.objects.filter(workflow=instance.workflow, name__in=getattr(instance, direction))
+        for node in close_nodes.iterator():
+            out.append('<li><a href="%(href)s">%(label)s</a></li>' % {
+                'label': node.label,
+                'href': reverse('admin:workflow_workflownode_change', args=(node.pk,))})
+        out.append('</ul>')
+        return ''.join(out)
+
+    def pretty_outcomings(self, instance):
+        return self._pretty_proximity_list(instance, 'outcomings')
+    pretty_outcomings.allow_tags = True
+    pretty_outcomings.short_description = 'Outcomings'
+
+    def pretty_incomings(self, instance):
+        return self._pretty_proximity_list(instance, 'incomings')
+    pretty_incomings.allow_tags = True
+    pretty_incomings.short_description = 'Incomings'
