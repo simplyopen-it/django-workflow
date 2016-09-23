@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.text import slugify
 from django.utils.encoding import python_2_unicode_compatible
-from django_extensions.db.fields.json import JSONField
+from . import fields
 from . import managers
 
 TRAVEL_PREFIX = 'travelto_'
@@ -103,7 +103,7 @@ class WorkflowNode(models.Model):
     ''' A workflow node '''
     name = models.SlugField(db_index=True)
     label = models.CharField(max_length=200)
-    outcomings = JSONField(default=list)
+    outcomings = fields.JSONListUniqueField(default=list)
     workflow = models.ForeignKey(Workflow, related_name='nodes', related_query_name='node')
 
     objects = managers.WorkflowNodeManager()
@@ -117,6 +117,22 @@ class WorkflowNode(models.Model):
     def natural_key(self):
         return self.workflow.natural_key() + (self.name,)
     natural_key.dependencies = ['workflow.workflow']
+
+    def _set_incomings(self, values):
+        for node in self.workflow.nodes.all().iterator():
+            if node.name in values:
+                node.outcomings.append(self.name)
+            elif self.name in node.outcomings:
+                node.outcomings.remove(self.name)
+            else:
+                continue
+            node.save()
+
+    def _get_incomings(self):
+        return [node.name for node in self.workflow.nodes.exclude(pk=self.pk)
+                if self.name in node.outcomings]
+
+    incomings = property(_get_incomings, _set_incomings)
 
 
 class WorkflowModel(models.Model):
@@ -134,7 +150,7 @@ class WorkflowModel(models.Model):
             if self.status is None:
                 self.status = self.workflow.head
             elif self.status not in self.workflow.keys():
-                raise WorkflowException("Invalid status '%s'" % self.pstatus)
+                raise WorkflowException("Invalid status '%s'" % self.status)
         super(WorkflowModel, self).save(*args, **kwargs)
 
     def allowed_statuses(self, user=None):
