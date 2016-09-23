@@ -60,6 +60,9 @@ def assign_permissions(apps, schema_editor):
         permissions = Permission.objects.filter(codename__in=codenames)
         group.permissions.add(*permissions)
 
+def noop(apps, schema_editor):
+    pass
+
 
 class Migration(migrations.Migration):
 
@@ -93,5 +96,5 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(create_wf_permissions, delete_wf_permissions),
         migrations.RunPython(create_node_permissions, delete_node_permissions),
-        migrations.RunPython(assign_permissions, migrations.RunPython.noop),
+        migrations.RunPython(assign_permissions, noop),
     ]
