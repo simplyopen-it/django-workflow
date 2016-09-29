@@ -39,14 +39,9 @@ class WorkflowAdmin(admin.ModelAdmin):
             'fields': (
                 'name',
                 'head',
+                'preview',
             ),
         }),
-        ('Preview', {
-             'fields': (
-                 'preview',
-             ),
-             'classes': ('collapse',),
-         }),
     ]
     list_display = (
         'name',
@@ -66,15 +61,6 @@ class WorkflowAdmin(admin.ModelAdmin):
         return urls
 
     def preview(self, instance):
-        # try:
-        #     from workflow import dot
-        # except ImportError:
-        #     return 'module <b>pydot</b> not installed'
-        # out_file = os.path.join(settings.MEDIA_ROOT, 'workflow', '%s.png' % instance.name)
-        # if not os.path.isdir(os.path.dirname(out_file)):
-        #     os.makedirs(os.path.dirname(out_file))
-        # dot.plot(instance, out_file)
-        # return '<img src="%sworkflow/%s.png">' % (settings.MEDIA_URL, instance.name)
         return '<a href="%s">Preview</a>' % reverse('admin:workflow_preview', args=(instance.pk,))
     preview.allow_tags = True
 
