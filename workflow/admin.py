@@ -59,6 +59,10 @@ class WorkflowAdmin(admin.ModelAdmin):
         return urls
 
     def preview(self, instance):
+        try:
+            from . import dot
+        except ImportError:
+            return "Preview not available, install python-pydot"
         return '<a href="%s">Preview</a>' % reverse('admin:workflow_preview', args=(instance.pk,))
     preview.allow_tags = True
 

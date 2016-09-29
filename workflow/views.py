@@ -7,7 +7,6 @@ from django.views.generic import View, DetailView
 from django.core.exceptions import PermissionDenied, ImproperlyConfigured
 from django.db import transaction
 from django.db.models.query import QuerySet
-from . import dot
 from .models import (
     get_travel_codename,
     Workflow,
@@ -19,6 +18,8 @@ class WorkflowPreviewView(DetailView):
     model = Workflow
 
     def render_to_response(self, context, **kwargs):
+        # pydot not required
+        from . import dot
         response = HttpResponse(content_type='image/png')
         response['Content-Disposition'] = 'attachment;filename=%s.png' % self.object.name
         # pydot require a file name, not a file-like object, thus we create a
@@ -59,6 +60,8 @@ class BaseStatusView(View):
     def post(self, request, *args, **kwargs):
         data = json.loads(request.POST.get(self.data_var, '[]'))
         with transaction.atomic():
+            # Status changes are made in a transaction block with serializable
+            # isolation because they depend on the curent status.
             self.queryset = self.get_queryset(pk__in=data.keys())
             for obj in self.queryset.iterator():
                 self.set_status(obj, **data[str(obj.pk)])
