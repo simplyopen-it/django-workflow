@@ -1,12 +1,32 @@
 from __future__ import unicode_literals
 
 import json
-from django.http import HttpResponseRedirect
-from django.views.generic import View
+import tempfile
+from django.http import HttpResponseRedirect, HttpResponse
+from django.views.generic import View, DetailView
 from django.core.exceptions import PermissionDenied, ImproperlyConfigured
 from django.db import transaction
 from django.db.models.query import QuerySet
-from .models import get_travel_codename
+from . import dot
+from .models import (
+    get_travel_codename,
+    Workflow,
+)
+
+
+class WorkflowPreviewView(DetailView):
+
+    model = Workflow
+
+    def render_to_response(self, context, **kwargs):
+        response = HttpResponse(content_type='image/png')
+        response['Content-Disposition'] = 'attachment;filename=%s.png' % self.object.name
+        # pydot require a file name, not a file-like object, thus we create a
+        # tmp file and copy it into the response.
+        with tempfile.NamedTemporaryFile() as buf:
+            dot.plot(self.object, buf.name)
+            response.write(buf.read())
+        return response
 
 
 class BaseStatusView(View):
