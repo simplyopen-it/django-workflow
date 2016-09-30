@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-import json
 import tempfile
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic import View, DetailView
-from django.core.exceptions import PermissionDenied, ImproperlyConfigured
+from django.views.generic.list import MultipleObjectMixin
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models.query import QuerySet
 from .models import (
     get_travel_codename,
     Workflow,
@@ -30,41 +29,24 @@ class WorkflowPreviewView(DetailView):
         return response
 
 
-class BaseStatusView(View):
+class BaseStatusView(MultipleObjectMixin, View):
     ''' Set the status of a WorkflowModel instance and redirect to
     'success_url'.
     '''
-
-    data_var = 'data'
     success_url = ''
-    model = None
-    queryset = None
 
-    def get_queryset(self, *args, **kwargs):
-        if self.queryset is not None:
-            queryset = self.queryset
-            if isinstance(queryset, QuerySet):
-                queryset = queryset.select_for_update().all()
-        elif self.model is not None:
-            queryset = self.model._default_manager.select_for_update().filter(*args, **kwargs) # pylint: disable=W0212
-        else:
-            raise ImproperlyConfigured(
-                "%(cls)s is missing a QuerySet. Define "
-                "%(cls)s.model, %(cls)s.queryset, or override "
-                "%(cls)s.get_queryset()." % {
-                    'cls': self.__class__.__name__
-                }
-            )
-        return queryset
+    def get_queryset(self):
+        return super(BaseStatusView, self).get_queryset().select_for_update()
 
-    def post(self, request, *args, **kwargs):
-        data = json.loads(request.POST.get(self.data_var, '[]'))
+    def post(self, request,  *args, **kwargs):
+        status = request.POST.get('status')
+        force = request.POST.get('force', False)
         with transaction.atomic():
             # Status changes are made in a transaction block with serializable
-            # isolation because they depend on the curent status.
-            self.queryset = self.get_queryset(pk__in=data.keys())
+            # isolation because they depend on the current status.
+            self.queryset = self.get_queryset()
             for obj in self.queryset.iterator():
-                self.set_status(obj, **data[str(obj.pk)])
+                self.set_status(obj, status=status, force=force)
                 obj.save()
         return self.get_response()
 
