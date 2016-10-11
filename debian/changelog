@@ -1,3 +1,14 @@
+django-workflow (1.4.0) unstable; urgency=medium
+
+  * cleanup and add LICENSE
+  * improve admin
+  * readme
+  * update README
+  * make pydot not required (again)
+  * simplify workflow BaseStatusView
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Tue, 11 Oct 2016 12:24:26 +0200
+
 django-workflow (1.3.5) unstable; urgency=medium
 
   * squash migrations
