@@ -10,6 +10,13 @@ from . import managers
 TRAVEL_PREFIX = 'travelto_'
 VISIT_PREFIX = 'visit_'
 
+pre_set_status = models.signals.ModelSignal(
+    providing_args=["instance", "from_status", "to_status", "args", "kwargs"],
+    use_caching=True)
+post_set_status = models.signals.ModelSignal(
+    providing_args=["instance", "from_status", "to_status", "args", "kwargs"],
+    use_caching=True)
+
 def get_travel_codename(node):
     return 'workflow.%s%s' % (TRAVEL_PREFIX, slugify(unicode(node)))
 
@@ -175,4 +182,10 @@ class WorkflowModel(models.Model):
         ''' Controlled status set. '''
         if not self.can_travel(status):
             raise WorkflowException("Can not travel from '%s' to '%s'" % (self.status, status))
+        from_status = self.status
+        to_status = status
+        pre_set_status.send(sender=self.__class__, instance=self,
+                            from_status=from_status, to_status=to_status)
         self.status = status
+        post_set_status.send(sender=self.__class__, instance=self,
+                             from_status=from_status, to_status=to_status)
