@@ -185,7 +185,7 @@ class WorkflowModel(models.Model):
         from_status = self.status
         to_status = status
         pre_set_status.send(sender=self.__class__, instance=self,
-                            from_status=from_status, to_status=to_status)
+                            from_status=from_status, to_status=to_status, *args, **kwargs)
         self.status = status
         post_set_status.send(sender=self.__class__, instance=self,
-                             from_status=from_status, to_status=to_status)
+                             from_status=from_status, to_status=to_status, *args, **kwargs)
