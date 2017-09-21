@@ -1,3 +1,11 @@
+django-workflow (1.4.1) unstable; urgency=medium
+
+  * update setup.py
+  * signal status change
+  * pass kwargs to signals
+
+ -- Marco Pattaro <marco.pattaro@simplyopen.org>  Thu, 21 Sep 2017 13:05:52 +0200
+
 django-workflow (1.4.0) unstable; urgency=medium
 
   * cleanup and add LICENSE
