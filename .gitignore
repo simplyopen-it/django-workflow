@@ -2,5 +2,6 @@
 *~
 \#*
 .\#*
-*.egg-info
-build
+*.egg-info/
+build/
+dist/
