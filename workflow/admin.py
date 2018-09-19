@@ -2,7 +2,11 @@
 from __future__ import unicode_literals
 
 from django.conf.urls import url
-from django.core.urlresolvers import reverse
+try:
+    from django.core.urlresolvers import reverse, NoReverseMatch
+except ImportError:
+    from django.urls import reverse, NoReverseMatch
+from django.utils.html import format_html
 from django.contrib import admin
 from django.contrib.admin.decorators import register
 from .forms import (
@@ -60,11 +64,14 @@ class WorkflowAdmin(admin.ModelAdmin):
 
     def preview(self, instance):
         try:
-            from . import dot
+            from . import dot # pylint: disable=unused-variable
         except ImportError:
-            return "Preview not available, install python-pydot"
-        return '<a href="%s">Preview</a>' % reverse('admin:workflow_preview', args=(instance.pk,))
-    preview.allow_tags = True
+            return "Preview not available, install python-pydot."
+        try:
+            href = reverse('admin:workflow_preview', kwargs={'pk': instance.pk})
+        except NoReverseMatch:
+            return 'Preview not available yet.'
+        return format_html('<a href="{}">Preview</a>'.format(href))
 
 
 @register(WorkflowNode)
@@ -111,14 +118,12 @@ class WorkflowNodeAdmin(admin.ModelAdmin):
                 'label': node.label,
                 'href': reverse('admin:workflow_workflownode_change', args=(node.pk,))})
         out.append('</ul>')
-        return ''.join(out)
+        return format_html(''.join(out))
 
     def pretty_outcomings(self, instance):
         return self._pretty_proximity_list(instance, 'outcomings')
-    pretty_outcomings.allow_tags = True
     pretty_outcomings.short_description = 'Outcomings'
 
     def pretty_incomings(self, instance):
         return self._pretty_proximity_list(instance, 'incomings')
-    pretty_incomings.allow_tags = True
     pretty_incomings.short_description = 'Incomings'

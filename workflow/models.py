@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import six
 from django.db import models
 from django.utils.text import slugify
 from django.utils.encoding import python_2_unicode_compatible
@@ -18,10 +19,10 @@ post_set_status = models.signals.ModelSignal(
     use_caching=True)
 
 def get_travel_codename(node):
-    return 'workflow.%s%s' % (TRAVEL_PREFIX, slugify(unicode(node)))
+    return 'workflow.%s%s' % (TRAVEL_PREFIX, slugify(six.text_type(node)))
 
 def get_visit_codename(node):
-    return 'workflow.%s%s' % (VISIT_PREFIX, slugify(unicode(node)))
+    return 'workflow.%s%s' % (VISIT_PREFIX, slugify(six.text_type(node)))
 
 
 class WorkflowException(ValueError): pass
@@ -111,7 +112,9 @@ class WorkflowNode(models.Model):
     name = models.SlugField(db_index=True)
     label = models.CharField(max_length=200)
     outcomings = fields.JSONListUniqueField(default=list)
-    workflow = models.ForeignKey(Workflow, related_name='nodes', related_query_name='node')
+    workflow = models.ForeignKey(Workflow, related_name='nodes',
+                                 related_query_name='node',
+                                 on_delete=models.CASCADE)
 
     objects = managers.WorkflowNodeManager()
 
@@ -147,7 +150,7 @@ class WorkflowModel(models.Model):
     '''
     # pylint: disable=E1136
     status = models.CharField(max_length=255)
-    workflow = models.ForeignKey(Workflow)
+    workflow = models.ForeignKey(Workflow, on_delete=models.CASCADE)
 
     class Meta: # pylint: disable=W0232
         abstract = True
