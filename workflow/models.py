@@ -156,11 +156,10 @@ class WorkflowModel(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
-        if self.workflow is not None:
-            if self.status is None:
-                self.status = self.workflow.head
-            elif self.status not in self.workflow.keys():
-                raise WorkflowException("Invalid status '%s'" % self.status)
+        if not self.status:
+            self.status = self.workflow.head
+        elif self.status not in self.workflow.keys():
+            raise WorkflowException("Invalid status '%s'" % self.status)
         super(WorkflowModel, self).save(*args, **kwargs)
 
     def allowed_statuses(self, user=None):
