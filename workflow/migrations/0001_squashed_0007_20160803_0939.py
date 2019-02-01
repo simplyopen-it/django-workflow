@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('name', models.SlugField()),
                 ('label', models.CharField(max_length=200)),
                 ('outcomings', workflow.fields.JSONListUniqueField(default=list)),
-                ('workflow', models.ForeignKey(related_query_name='node', related_name='nodes', to='workflow.Workflow')),
+                ('workflow', models.ForeignKey(related_query_name='node', related_name='nodes', to='workflow.Workflow', on_delete=models.CASCADE)),
             ],
         ),
         migrations.AlterUniqueTogether(

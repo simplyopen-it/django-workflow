@@ -1,7 +1,8 @@
 #!/usr/bin/env make -f
 
 PYTHON=/usr/bin/env python
-REPOSITORY="https://apt.simplyopen.org:8888"
+PY_PACKAGE_NAME=workflow
+REPOSITORY="https://pypi.simplyopen.org"
 
 .PHONY: all
 all: sdist

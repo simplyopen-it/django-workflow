@@ -33,17 +33,27 @@ class WorkflowNodeForm(forms.ModelForm):
 
     def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
                  initial=None, error_class=ErrorList, label_suffix=None,
-                 empty_permitted=False, instance=None):
+                 empty_permitted=False, instance=None, use_required_attribute=None):
         if initial is None:
             initial = {}
         if instance is not None:
             initial.update({
                 'outcomings': instance.outcomings,
             })
-        super(WorkflowNodeForm, self).__init__(
-            data=data, files=files, auto_id=auto_id, prefix=prefix,
-            initial=initial, error_class=error_class, label_suffix=label_suffix,
-            empty_permitted=empty_permitted, instance=instance)
+        try:
+            super(WorkflowNodeForm, self).__init__(
+                data=data, files=files, auto_id=auto_id, prefix=prefix,
+                initial=initial, error_class=error_class, label_suffix=label_suffix,
+                empty_permitted=empty_permitted, instance=instance,
+                use_required_attribute=use_required_attribute
+            )
+        except TypeError:
+            # Without 'use_required_attribute'
+            super(WorkflowNodeForm, self).__init__(
+                data=data, files=files, auto_id=auto_id, prefix=prefix,
+                initial=initial, error_class=error_class, label_suffix=label_suffix,
+                empty_permitted=empty_permitted, instance=instance
+            )
         if instance is not None:
             self.fields['outcomings'].choices = instance.workflow.nodes.values_list('name', 'label')
 
