@@ -29,14 +29,13 @@ def delete_wf_permissions(instance, **kwargs):
 
 @receiver(signals.post_save, sender=WorkflowNode)
 def create_node_permissions(instance, created, **kwargs):
-    if created:
-        content_type = ContentType.objects.get_for_model(WorkflowNode)
-        Permission.objects.get_or_create(codename=get_travel_codename(instance),
-                                         name="Can travel to %s" % six.text_type(instance),
-                                         content_type=content_type)
-        Permission.objects.get_or_create(codename=get_visit_codename(instance),
-                                         name="Can visit %s" % six.text_type(instance),
-                                         content_type=content_type)
+    content_type = ContentType.objects.get_for_model(WorkflowNode)
+    Permission.objects.get_or_create(codename=get_travel_codename(instance),
+                                     name="Can travel to %s" % six.text_type(instance),
+                                     content_type=content_type)
+    Permission.objects.get_or_create(codename=get_visit_codename(instance),
+                                     name="Can visit %s" % six.text_type(instance),
+                                     content_type=content_type)
 
 @receiver(signals.post_delete, sender=WorkflowNode)
 def delete_node_permissions(instance, **kwargs):

@@ -19,10 +19,10 @@ post_set_status = models.signals.ModelSignal(
     use_caching=True)
 
 def get_travel_codename(node):
-    return 'workflow.%s%s' % (TRAVEL_PREFIX, slugify(six.text_type(node)))
+    return '{}{}'.format(TRAVEL_PREFIX, slugify(six.text_type(node)))
 
 def get_visit_codename(node):
-    return 'workflow.%s%s' % (VISIT_PREFIX, slugify(six.text_type(node)))
+    return '{}{}'.format(VISIT_PREFIX, slugify(six.text_type(node)))
 
 
 class WorkflowException(ValueError): pass
@@ -169,7 +169,7 @@ class WorkflowModel(models.Model):
         qs = WorkflowNode.objects.filter(workflow=self.workflow, name__in=self.workflow[self.status].outcomings)
         if user is not None:
             return dict([(node.name, node) for node in qs.iterator()
-                         if user.has_perm(get_travel_codename(node))])
+                         if user.has_perm('workflow.{}'.format(get_travel_codename(node)))])
         return dict([(node.name, node) for node in qs.iterator()])
 
     def can_travel(self, target):
