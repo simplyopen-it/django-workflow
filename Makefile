@@ -10,6 +10,7 @@ all: sdist
 .PHONY: clean
 clean:
 	rm -fr dist/* *.egg-info
+	find . -name "*.pyc" -type f -exec rm -f {} +
 
 sdist:
 	$(PYTHON) setup.py sdist
