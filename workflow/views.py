@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from __future__ import absolute_import
 import tempfile
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic import View, DetailView

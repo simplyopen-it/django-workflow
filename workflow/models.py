@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from django.db import models
 from django.utils.text import slugify
 from django.utils.encoding import python_2_unicode_compatible
+
+import six
+
 from . import fields
 from . import managers
 
@@ -18,10 +22,10 @@ post_set_status = models.signals.ModelSignal(
     use_caching=True)
 
 def get_travel_codename(node):
-    return 'workflow.%s%s' % (TRAVEL_PREFIX, slugify(unicode(node)))
+    return 'workflow.%s%s' % (TRAVEL_PREFIX, slugify(six.text_type(node)))
 
 def get_visit_codename(node):
-    return 'workflow.%s%s' % (VISIT_PREFIX, slugify(unicode(node)))
+    return 'workflow.%s%s' % (VISIT_PREFIX, slugify(six.text_type(node)))
 
 
 class WorkflowException(ValueError): pass
@@ -79,10 +83,10 @@ class Workflow(models.Model):
         return self.nodes.all().iterator()
 
     def values(self):
-        return [value for value in self.itervalues()]
+        return [value for value in six.itervalues(self)]
 
     def keys(self):
-        return [key for key in self.iterkeys()]
+        return [key for key in six.iterkeys(self)]
 
     def iterkeys(self):
         return self.nodes.values_list('name', flat=True).iterator()
@@ -156,7 +160,7 @@ class WorkflowModel(models.Model):
         if self.workflow is not None:
             if self.status is None:
                 self.status = self.workflow.head
-            elif self.status not in self.workflow.keys():
+            elif self.status not in list(self.workflow.keys()):
                 raise WorkflowException("Invalid status '%s'" % self.status)
         super(WorkflowModel, self).save(*args, **kwargs)
 
