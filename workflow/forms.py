@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from django import forms
 from django.forms.utils import ErrorList
 from django.contrib.admin import widgets as admin_widgets

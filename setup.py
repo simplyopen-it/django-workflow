@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from setuptools import setup, find_packages
 from workflow import __version__
 
@@ -12,6 +13,7 @@ setup(name="django-workflow",
       install_requires=[
           'Django>=1.7',
           'django-extensions>=1.3.10',
+          "six",
       ],
       include_package_data = True,
       classifiers=[
