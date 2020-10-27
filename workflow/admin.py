@@ -63,6 +63,8 @@ class WorkflowAdmin(admin.ModelAdmin):
         return urls
 
     def preview(self, instance):
+        if not instance.pk:
+            return
         try:
             from . import dot # pylint: disable=unused-variable
         except ImportError:
