@@ -7,6 +7,7 @@ setup(name="django-workflow",
       long_description="Edit and Manage workflows to associate to your Django objects",
       author="SimplyOpen",
       author_email="info@simplyopen.org",
+      url="https://github.com/simplyopen-it/django-workflow",
       packages=find_packages(),
       install_requires=[
           'Django>=1.7',
